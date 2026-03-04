@@ -42,7 +42,7 @@
                             </padding>
                             <!-- Subsection: Input + Send Action -->
                             <HBox fx:id="inputShell" styleClass="input-shell" alignment="CENTER_LEFT" spacing="10">
-                                <TextArea fx:id="inputArea" prefRowCount="1" wrapText="true" promptText="Message Cortex..." HBox.hgrow="ALWAYS" />
+                                <TextArea fx:id="inputArea" styleClass="input-area" prefRowCount="1" wrapText="true" promptText="Message Cortex..." HBox.hgrow="ALWAYS" />
                                 <Button fx:id="terminalToggleButton" text=">_" focusTraversable="false" styleClass="terminal-toggle-button" />
                                 <MenuButton fx:id="exportButton" text="⋯" styleClass="overflow-menu-button" focusTraversable="false">
                                     <items>

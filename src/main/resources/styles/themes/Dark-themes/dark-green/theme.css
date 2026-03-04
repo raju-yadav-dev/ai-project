@@ -221,7 +221,6 @@
     -fx-text-fill: #e2f8f0;
     -fx-border-color: rgba(16, 185, 129, 0.08);
     -fx-prompt-text-fill: #94b8a8;
-    -fx-control-inner-background: rgba(18, 36, 30, 0.8);
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 12, 0.2, 0, 2);
 }
 
@@ -231,8 +230,7 @@
 }
 
 .input-area {
-    -fx-background-color: rgba(18, 36, 30, 0.8);
-    -fx-control-inner-background: rgba(18, 36, 30, 0.8);
+    -fx-background-color: transparent;
     -fx-text-fill: #e2f8f0;
     -fx-prompt-text-fill: #94b8a8;
     -fx-border-color: rgba(16, 185, 129, 0.08);
@@ -240,9 +238,16 @@
 }
 
 .input-area:focused {
-    -fx-background-color: rgba(18, 36, 30, 0.8);
+    -fx-background-color: transparent;
     -fx-border-color: rgba(16, 185, 129, 0.08);
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 12, 0.2, 0, 2);
+}
+
+.input-area .content,
+.input-area .scroll-pane,
+.input-area .scroll-pane .viewport,
+.input-area .scroll-pane .content {
+    -fx-background-color: transparent;
 }
 
 /* SEND BUTTON */
@@ -319,7 +324,7 @@
 .app-root.light-mode .text-field,
 .app-root.light-mode .text-area,
 .app-root.light-mode .input-area {
-    -fx-background-color: #f1f9f5;
+    -fx-background-color: transparent;
     -fx-text-fill: #1e3b2e;
     -fx-border-color: rgba(16, 185, 129, 0.15);
     -fx-prompt-text-fill: #94b8a8;
@@ -328,6 +333,7 @@
 .app-root.light-mode .text-field:focused,
 .app-root.light-mode .text-area:focused,
 .app-root.light-mode .input-area:focused {
+    -fx-background-color: transparent;
     -fx-border-color: rgba(16, 185, 129, 0.15);
 }
 

@@ -1580,16 +1580,24 @@
     -fx-pref-height: 34;
     -fx-min-height: 34;
     -fx-max-height: 96;
+    -fx-background-color: transparent;
 }
 
 .input-shell #inputArea .content {
     -fx-padding: 6 0 6 0;
+    -fx-background-color: transparent;
+}
+
+.input-shell #inputArea .viewport,
+.input-shell #inputArea .scroll-pane,
+.input-shell #inputArea .scroll-pane .content {
+    -fx-background-color: transparent;
 }
 
 .text-area {
     -fx-font-size: 14px;
     -fx-padding: 0;
-    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-color: transparent;
     -fx-background-insets: 0;
     -fx-border-color: transparent;
     -fx-border-width: 0;

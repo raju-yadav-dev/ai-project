@@ -220,7 +220,6 @@
     -fx-text-fill: #1e293b;
     -fx-border-color: rgba(99, 102, 241, 0.15);
     -fx-prompt-text-fill: #94a3b8;
-    -fx-control-inner-background: #f1f5f9;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 6, 0.1, 0, 1);
 }
 
@@ -230,8 +229,7 @@
 }
 
 .input-area {
-    -fx-background-color: #f1f5f9;
-    -fx-control-inner-background: #f1f5f9;
+    -fx-background-color: transparent;
     -fx-text-fill: #1e293b;
     -fx-prompt-text-fill: #94a3b8;
     -fx-border-color: rgba(99, 102, 241, 0.15);
@@ -239,9 +237,16 @@
 }
 
 .input-area:focused {
-    -fx-background-color: #f1f5f9;
+    -fx-background-color: transparent;
     -fx-border-color: rgba(99, 102, 241, 0.15);
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 6, 0.1, 0, 1);
+}
+
+.input-area .content,
+.input-area .scroll-pane,
+.input-area .scroll-pane .viewport,
+.input-area .scroll-pane .content {
+    -fx-background-color: transparent;
 }
 
 /* SEND BUTTON */
