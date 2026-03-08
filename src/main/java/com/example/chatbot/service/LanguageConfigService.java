@@ -155,23 +155,37 @@ public class LanguageConfigService {
     /** Check if a system command is available (cached). */
     public boolean isCommandAvailable(String commandName) {
         if (commandName == null || commandName.isBlank()) return false;
-        return commandAvailabilityCache.computeIfAbsent(commandName, cmd -> {
-            boolean isWindows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
-            List<String> probe = isWindows
-                    ? List.of("cmd", "/c", "where", cmd)
-                    : List.of("sh", "-lc", "command -v " + cmd);
-            try {
-                Process process = new ProcessBuilder(probe).redirectErrorStream(true).start();
-                boolean finished = process.waitFor(2, TimeUnit.SECONDS);
-                if (!finished) {
-                    process.destroyForcibly();
-                    return false;
-                }
-                return process.exitValue() == 0;
-            } catch (Exception ex) {
+        Boolean cached = commandAvailabilityCache.get(commandName);
+        if (Boolean.TRUE.equals(cached)) {
+            return true;
+        }
+
+        boolean available = probeCommandAvailability(commandName);
+        if (available) {
+            commandAvailabilityCache.put(commandName, true);
+        } else {
+            // Do not cache misses forever; environment/PATH can change while app is running.
+            commandAvailabilityCache.remove(commandName);
+        }
+        return available;
+    }
+
+    private boolean probeCommandAvailability(String commandName) {
+        boolean isWindows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+        List<String> probe = isWindows
+                ? List.of("cmd", "/c", "where", commandName)
+                : List.of("sh", "-lc", "command -v " + commandName);
+        try {
+            Process process = new ProcessBuilder(probe).redirectErrorStream(true).start();
+            boolean finished = process.waitFor(2, TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
                 return false;
             }
-        });
+            return process.exitValue() == 0;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     // ================= LANGUAGE ENTRY MODEL =================

@@ -12,6 +12,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,28 +77,10 @@ public class ChatService {
         thread.setDaemon(true);
         return thread;
     });
-    private final String apiBaseUrl;
-    private final String model;
-    private final String apiKey;
     private final SettingsManager settingsManager = SettingsManager.getInstance();
 
     public ChatService() {
-        Properties props = loadAppProperties();
-        this.apiBaseUrl = firstNonBlank(
-                System.getenv("OPENAI_BASE_URL"),
-                props.getProperty("openai_base_url"),
-                "https://api.openai.com"
-        );
-        this.model = firstNonBlank(
-                System.getenv("OPENAI_MODEL"),
-                props.getProperty("openai_model"),
-                DEFAULT_MODEL
-        );
-        this.apiKey = firstNonBlank(
-                System.getenv("OPENAI_API_KEY"),
-                System.getenv("PAST_API"),
-                props.getProperty("past_api")
-        );
+        // Configuration is resolved lazily per request so Settings updates take effect immediately.
     }
 
     // ================= CONVERSATION API =================
@@ -145,25 +128,17 @@ public class ChatService {
     }
 
     private Message requestAssistantReply(List<Message> historySnapshot) {
-        if (apiKey == null || apiKey.isBlank() || "PASTE_YOUR_API_KEY_HERE".equals(apiKey)) {
-            return new Message(Message.Sender.BOT, """
-                    API key is missing.
+        ApiConfig apiConfig = resolveApiConfig();
 
-                    Configure it in external `../app.properties`:
-
-                    ```properties
-                    past_api=PASTE_YOUR_API_KEY_HERE
-                    ```
-
-                    You can also set environment variable `OPENAI_API_KEY`.
-                    """);
+        if (isMissingApiKey(apiConfig.apiKey())) {
+            return new Message(Message.Sender.BOT, buildMissingApiKeyMessage(apiConfig.appPropertiesSource()));
         }
 
         try {
-            String body = buildChatRequestJson(historySnapshot);
+            String body = buildChatRequestJson(historySnapshot, apiConfig.modelName());
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(trimTrailingSlash(apiBaseUrl) + "/v1/chat/completions"))
-                    .header("Authorization", "Bearer " + apiKey)
+                .uri(URI.create(trimTrailingSlash(apiConfig.baseUrl()) + "/v1/chat/completions"))
+                .header("Authorization", "Bearer " + apiConfig.apiKey())
                     .header("Content-Type", "application/json")
                     .timeout(REQUEST_TIMEOUT)
                     .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
@@ -184,7 +159,7 @@ public class ChatService {
         }
     }
 
-    private String buildChatRequestJson(List<Message> historySnapshot) {
+    private String buildChatRequestJson(List<Message> historySnapshot, String modelName) {
         List<Message> sorted = historySnapshot.stream()
                 .sorted(Comparator.comparing(Message::getTimestamp))
                 .toList();
@@ -196,7 +171,7 @@ public class ChatService {
 
         StringBuilder builder = new StringBuilder();
         builder.append("{");
-        builder.append("\"model\":\"").append(jsonEscape(model)).append("\",");
+        builder.append("\"model\":\"").append(jsonEscape(modelName)).append("\",");
         builder.append("\"temperature\":").append(temperature).append(",");
         builder.append("\"max_tokens\":").append(maxTokens).append(",");
         builder.append("\"messages\":[");
@@ -294,45 +269,154 @@ public class ChatService {
         return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 
-    private Properties loadAppProperties() {
+    private LoadedProperties loadAppProperties() {
         Properties properties = new Properties();
         // Preferred order:
-        // 1) explicit path (app.config.path / APP_CONFIG_PATH),
-        // 2) parent folder (../app.properties),
-        // 3) working folder (./app.properties),
-        // 4) classpath fallback for older setups.
-        if (loadPropertiesFromFile(properties, resolveConfiguredPropertiesPath())) {
-            return properties;
+        // 1) Cortex folder (outside ai-project),
+        // 2) ai-project/src/main/resources/app.properties,
+        // 3) classpath fallback (/app.properties).
+
+        Path projectDir = resolveProjectDirectory();
+        Path externalPath = projectDir != null && projectDir.getParent() != null
+                ? projectDir.getParent().resolve(APP_PROPERTIES_FILE).toAbsolutePath().normalize()
+                : null;
+        if (loadPropertiesFromFile(properties, externalPath)) {
+            return new LoadedProperties(properties, AppPropertiesSource.CORTEX_ROOT);
         }
-        if (loadPropertiesFromFile(properties, Path.of("..", APP_PROPERTIES_FILE).toAbsolutePath().normalize())) {
-            return properties;
+
+        Path resourcePath = resolveResourcePropertiesPath(projectDir);
+        if (loadPropertiesFromFile(properties, resourcePath)) {
+            return new LoadedProperties(properties, AppPropertiesSource.RESOURCE_FALLBACK);
         }
-        if (loadPropertiesFromFile(properties, Path.of(APP_PROPERTIES_FILE).toAbsolutePath().normalize())) {
-            return properties;
-        }
+
         try (InputStream input = getClass().getResourceAsStream("/" + APP_PROPERTIES_FILE)) {
             if (input != null) {
                 properties.load(input);
+                return new LoadedProperties(properties, AppPropertiesSource.RESOURCE_FALLBACK);
             }
         } catch (IOException ignored) {
             // Keep defaults if config file cannot be read.
         }
-        return properties;
+        return new LoadedProperties(properties, AppPropertiesSource.NOT_FOUND);
     }
 
-    private Path resolveConfiguredPropertiesPath() {
-        String configuredPath = firstNonBlank(
-                System.getProperty("app.config.path"),
-                System.getenv("APP_CONFIG_PATH")
-        );
-        if (configuredPath == null) {
-            return null;
-        }
+    private Path resolveProjectDirectory() {
         try {
-            return Path.of(configuredPath).toAbsolutePath().normalize();
+            Path userDir = Paths.get(System.getProperty("user.dir", ".")).toAbsolutePath().normalize();
+            if ("ai-project".equalsIgnoreCase(userDir.getFileName() != null ? userDir.getFileName().toString() : "")) {
+                return userDir;
+            }
+
+            Path nestedAiProject = userDir.resolve("ai-project");
+            if (Files.isDirectory(nestedAiProject)) {
+                return nestedAiProject.toAbsolutePath().normalize();
+            }
+
+            return userDir;
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    private ApiConfig resolveApiConfig() {
+        LoadedProperties loaded = loadAppProperties();
+        Properties props = loaded.properties();
+
+        String configuredBaseUrl = settingIfCustomized("ai.baseUrl", "https://api.openai.com");
+        String configuredModelName = settingIfCustomized("ai.modelName", DEFAULT_MODEL);
+
+        String baseUrl = firstNonBlank(
+                System.getenv("OPENAI_BASE_URL"),
+            configuredBaseUrl,
+                props.getProperty("openai_base_url"),
+                "https://api.openai.com"
+        );
+        String modelName = firstNonBlank(
+                System.getenv("OPENAI_MODEL"),
+            configuredModelName,
+                props.getProperty("openai_model"),
+                DEFAULT_MODEL
+        );
+        String apiKey = firstNonBlank(
+                System.getenv("OPENAI_API_KEY"),
+                System.getenv("PAST_API"),
+                settingsManager.getString("ai.apiKey", ""),
+                props.getProperty("past_api")
+        );
+
+        return new ApiConfig(baseUrl, modelName, apiKey, loaded.source());
+    }
+
+    private String settingIfCustomized(String key, String defaultValue) {
+        String value = settingsManager.getString(key, "");
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (defaultValue != null && trimmed.equals(defaultValue)) {
+            return null;
+        }
+        return trimmed;
+    }
+
+    private boolean isMissingApiKey(String apiKey) {
+        return apiKey == null || apiKey.isBlank() || "PASTE_YOUR_API_KEY_HERE".equals(apiKey);
+    }
+
+    private String buildMissingApiKeyMessage(AppPropertiesSource source) {
+        if (source == AppPropertiesSource.RESOURCE_FALLBACK) {
+            return """
+                    API key is missing.
+
+                    `Cortex/app.properties` was not found, so the app used the bundled resource `app.properties`.
+                    That fallback file does not have a valid `past_api` value.
+
+                    Please add your key in `ai-project/src/main/resources/app.properties`:
+
+                    ```properties
+                    past_api=YOUR_REAL_API_KEY
+                    ```
+
+                    You can also set it in Settings > AI Model or environment variable `OPENAI_API_KEY`.
+                    """;
+        }
+
+        return """
+                API key is missing.
+
+                Configure it in Settings > AI Model,
+            or in `ai-project/src/main/resources/app.properties`:
+
+                ```properties
+                past_api=YOUR_REAL_API_KEY
+                ```
+
+                You can also set environment variable `OPENAI_API_KEY`.
+                """;
+    }
+
+    private record ApiConfig(String baseUrl, String modelName, String apiKey, AppPropertiesSource appPropertiesSource) {
+    }
+
+    private record LoadedProperties(Properties properties, AppPropertiesSource source) {
+    }
+
+    private enum AppPropertiesSource {
+        CORTEX_ROOT,
+        RESOURCE_FALLBACK,
+        NOT_FOUND
+    }
+
+    private Path resolveResourcePropertiesPath(Path projectDir) {
+        if (projectDir == null) {
+            return null;
+        }
+        return projectDir.resolve("src")
+                .resolve("main")
+                .resolve("resources")
+                .resolve(APP_PROPERTIES_FILE)
+                .toAbsolutePath()
+                .normalize();
     }
 
     private boolean loadPropertiesFromFile(Properties properties, Path path) {

@@ -121,6 +121,9 @@ public class ChatController {
     private static final Pattern ORDERED_LIST_PATTERN = Pattern.compile("^(\\d+)\\.\\s+(.*)$");
     private static final Pattern UNORDERED_LIST_PATTERN = Pattern.compile("^[-*]\\s+(.*)$");
     private static final Pattern INLINE_MARKDOWN_PATTERN = Pattern.compile("(\\*\\*([^*]+)\\*\\*)|(`([^`]+)`)|(\\*([^*]+)\\*)");
+    private static final double MESSAGE_WIDTH_RATIO = 0.70;
+    private static final double MESSAGE_MAX_WIDTH_CAP = 920;
+    private static final double MESSAGE_MIN_WIDTH = 260;
     private static final Pattern PUBLIC_CLASS_PATTERN = Pattern.compile("\\bpublic\\s+class\\s+([A-Za-z_$][\\w$]*)\\b");
     private static final Pattern CLASS_PATTERN = Pattern.compile("\\bclass\\s+([A-Za-z_$][\\w$]*)\\b");
     private static final double TERMINAL_MIN_WIDTH = 280;
@@ -160,6 +163,14 @@ public class ChatController {
     // ================= INITIALIZATION =================
     @FXML
     public void initialize() {
+        if (scrollPane != null) {
+            scrollPane.setFitToWidth(true);
+        }
+        if (messageBox != null) {
+            messageBox.setFillWidth(true);
+            messageBox.setMaxWidth(Double.MAX_VALUE);
+        }
+
         // ---- Disable Send For Empty Input ----
         sendButton.disableProperty().bind(
                 Bindings.createBooleanBinding(
@@ -364,17 +375,20 @@ public class ChatController {
     private HBox createGeneratingBubble() {
         HBox row = new HBox();
         row.getStyleClass().add("message-row");
+        row.setMaxWidth(Double.MAX_VALUE);
         row.setAlignment(Pos.TOP_LEFT);
 
         Label generatingLabel = new Label("Cortex is generating");
         generatingLabel.setWrapText(true);
-        generatingLabel.setMaxWidth(520);
+        applyResponsiveMaxWidth(generatingLabel);
         generatingLabel.getStyleClass().addAll("message-text", "message-generating-text");
 
         VBox contentBox = new VBox(8, generatingLabel);
 
         VBox bubble = new VBox(contentBox);
         bubble.getStyleClass().addAll("message-bubble", "bot-bubble", "generating-bubble");
+        bubble.setFillWidth(true);
+        applyResponsivePrefWidth(bubble);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -575,7 +589,7 @@ public class ChatController {
                 codeArea.setEditable(false);
                 codeArea.setWrapText(false);
                 codeArea.setFocusTraversable(false);
-                codeArea.setMaxWidth(520);
+                applyResponsiveMaxWidth(codeArea);
                 codeArea.getStyleClass().add("message-code");
                 int lineCount = Math.max(1, displayText.split("\\R", -1).length);
                 codeArea.setPrefRowCount(lineCount);
@@ -583,7 +597,7 @@ public class ChatController {
 
                 VBox codeWrapper = new VBox(6, langLabel, codeArea);
                 codeWrapper.getStyleClass().add("message-code-block");
-                codeWrapper.setMaxWidth(520);
+                applyResponsiveMaxWidth(codeWrapper);
 
                 streamingActiveVBox = codeWrapper;
                 streamingActiveNode = codeWrapper;
@@ -617,7 +631,7 @@ public class ChatController {
                 streamingActiveIsCode = false;
                 streamingActiveVBox = new VBox(4);
                 streamingActiveVBox.getStyleClass().add("message-markdown");
-                streamingActiveVBox.setMaxWidth(520);
+                applyResponsiveMaxWidth(streamingActiveVBox);
                 streamingActiveNode = streamingActiveVBox;
                 pendingBubbleContentBox.getChildren().add(streamingActiveNode);
             }
@@ -627,7 +641,7 @@ public class ChatController {
         }
     }
 
-    /** Populate a VBox with formatted TextFlow nodes from markdown text, reusing existing children. */
+    /** Populate a markdown VBox with per-line containers so inline queries can anchor to a specific line. */
     private void populateFormattedLines(VBox container, String rawText) {
         String[] lines = rawText.split("\\R", -1);
         int lineIdx = 0;
@@ -660,35 +674,49 @@ public class ChatController {
             // Strip trailing unclosed markdown markers during streaming
             String cleanLine = trimmedLine.replaceAll("[*`]+$", "");
 
-            TextFlow flow;
+            String displayText;
+            String lineStyleClass = "message-line-plain";
             Matcher headingMatcher = HEADING_PATTERN.matcher(cleanLine);
             if (headingMatcher.matches()) {
                 int level = headingMatcher.group(1).length();
-                flow = createInlineTextFlow(headingMatcher.group(2));
-                flow.getStyleClass().add("message-heading");
-                flow.getStyleClass().add("message-heading-" + level);
+                displayText = stripInlineMarkdownMarkers(headingMatcher.group(2));
+                lineStyleClass = "message-line-heading-" + level;
             } else {
                 Matcher orderedMatcher = ORDERED_LIST_PATTERN.matcher(cleanLine);
                 if (orderedMatcher.matches()) {
-                    flow = createInlineTextFlow(orderedMatcher.group(2));
-                    flow.getStyleClass().add("message-list-item");
-                    flow.getChildren().add(0, createStyledText(orderedMatcher.group(1) + ". ", "message-list-marker"));
+                    displayText = orderedMatcher.group(1) + ". " + stripInlineMarkdownMarkers(orderedMatcher.group(2));
+                    lineStyleClass = "message-line-list";
                 } else {
                     Matcher unorderedMatcher = UNORDERED_LIST_PATTERN.matcher(cleanLine);
                     if (unorderedMatcher.matches()) {
-                        flow = createInlineTextFlow(unorderedMatcher.group(1));
-                        flow.getStyleClass().add("message-list-item");
-                        flow.getChildren().add(0, createStyledText("\u2022 ", "message-list-marker"));
+                        displayText = "\u2022 " + stripInlineMarkdownMarkers(unorderedMatcher.group(1));
+                        lineStyleClass = "message-line-list";
                     } else {
-                        flow = createInlineTextFlow(cleanLine);
+                        displayText = stripInlineMarkdownMarkers(cleanLine);
                     }
                 }
             }
 
+            VBox lineContainer = new VBox();
+            lineContainer.getStyleClass().add("message-line-container");
+
+            TextArea lineText = new TextArea(displayText.isEmpty() ? " " : displayText);
+            lineText.setEditable(false);
+            lineText.setWrapText(true);
+            lineText.setFocusTraversable(false);
+            lineText.getStyleClass().addAll("message-line-text", lineStyleClass);
+            applyResponsiveMaxWidth(lineText);
+
+            int wrappedLines = Math.max(1, (int) Math.ceil((displayText.length() + 1) / 62.0));
+            lineText.setPrefRowCount(wrappedLines);
+            lineText.setMinHeight(Region.USE_PREF_SIZE);
+
+            lineContainer.getChildren().add(lineText);
+
             if (lineIdx < container.getChildren().size()) {
-                container.getChildren().set(lineIdx, flow);
+                container.getChildren().set(lineIdx, lineContainer);
             } else {
-                container.getChildren().add(flow);
+                container.getChildren().add(lineContainer);
             }
             lineIdx++;
         }
@@ -697,6 +725,17 @@ public class ChatController {
         while (container.getChildren().size() > lineIdx) {
             container.getChildren().remove(container.getChildren().size() - 1);
         }
+    }
+
+    private String stripInlineMarkdownMarkers(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        String cleaned = value;
+        cleaned = cleaned.replaceAll("\\*\\*(.+?)\\*\\*", "$1");
+        cleaned = cleaned.replaceAll("`(.+?)`", "$1");
+        cleaned = cleaned.replaceAll("(?<!\\*)\\*(?!\\*)(.+?)(?<!\\*)\\*(?!\\*)", "$1");
+        return cleaned;
     }
 
     private void replacePendingBubbleWithFinal(Message responseMessage) {
@@ -718,10 +757,14 @@ public class ChatController {
     private HBox createBubble(Message msg) {
         HBox row = new HBox();
         row.getStyleClass().add("message-row");
+        row.setMaxWidth(Double.MAX_VALUE);
 
-        Node content = buildMessageContent(msg.getContent());
+        Node content = msg.getSender() == Message.Sender.USER
+            ? buildCompactUserContent(msg.getContent())
+            : buildMessageContent(msg.getContent());
         VBox bubble = new VBox(content);
         bubble.getStyleClass().add("message-bubble");
+        applyResponsiveMaxWidth(bubble);
 
         // Copy icon outside the bubble
         Button copyIcon = new Button("\uD83D\uDCCB"); // clipboard emoji
@@ -751,11 +794,14 @@ public class ChatController {
         if (msg.getSender() == Message.Sender.USER) {
             row.setAlignment(Pos.TOP_RIGHT);
             bubble.getStyleClass().add("user-bubble");
+            bubble.setFillWidth(false);
             copyRow.setAlignment(Pos.CENTER_LEFT);
             row.getChildren().addAll(spacer, bubbleWrapper);
         } else {
             row.setAlignment(Pos.TOP_LEFT);
             bubble.getStyleClass().add("bot-bubble");
+            bubble.setFillWidth(true);
+            applyResponsivePrefWidth(bubble);
             copyRow.setAlignment(Pos.CENTER_RIGHT);
             row.getChildren().addAll(bubbleWrapper, spacer);
         }
@@ -768,15 +814,22 @@ public class ChatController {
         ContextMenu contextMenu = new ContextMenu();
         MenuItem copyItem = new MenuItem("Copy");
         copyItem.setOnAction(e -> {
-            String selected = getSelectedTextFromBubble(bubbleWrapper);
+            SelectedLineContext selectedContext = getSelectedLineContext(bubbleWrapper);
+            String selected = selectedContext != null ? selectedContext.selectedText() : getSelectedTextFromBubble(bubbleWrapper);
             copyCodeToClipboard(selected != null && !selected.isBlank() ? selected : fullText);
         });
 
         MenuItem askItem = new MenuItem("Ask about this");
         askItem.setOnAction(e -> {
+            SelectedLineContext selectedContext = getSelectedLineContext(bubbleWrapper);
+            if (selectedContext != null) {
+                insertInlineQuestion(selectedContext);
+                return;
+            }
+
             String selected = getSelectedTextFromBubble(bubbleWrapper);
             String context = (selected != null && !selected.isBlank()) ? selected : fullText;
-            insertInlineQuestion(bubbleWrapper, context);
+            insertInlineQuestion(new SelectedLineContext(context, bubbleWrapper, bubbleWrapper, null));
         });
 
         contextMenu.getItems().addAll(copyItem, new SeparatorMenuItem(), askItem);
@@ -795,8 +848,8 @@ public class ChatController {
     }
 
     private String getSelectedTextFromBubble(VBox bubbleWrapper) {
-        // Check code block TextAreas for selected text
-        for (Node child : bubbleWrapper.lookupAll(".message-code")) {
+        // Check code block and message text TextAreas for selected text
+        for (Node child : bubbleWrapper.lookupAll("TextArea")) {
             if (child instanceof TextArea ta) {
                 String selected = ta.getSelectedText();
                 if (selected != null && !selected.isBlank()) return selected;
@@ -805,20 +858,53 @@ public class ChatController {
         return null;
     }
 
-    private void insertInlineQuestion(VBox bubbleWrapper, String selectedText) {
-        // Find the parent row (HBox.message-row) in messageBox
-        Node parentRow = bubbleWrapper.getParent();
-        while (parentRow != null && !parentRow.getStyleClass().contains("message-row")) {
-            parentRow = parentRow.getParent();
-        }
-        if (parentRow == null) return;
+    private SelectedLineContext getSelectedLineContext(VBox bubbleWrapper) {
+        for (Node child : bubbleWrapper.lookupAll(".message-line-text")) {
+            if (!(child instanceof TextArea selectedArea)) {
+                continue;
+            }
+            String selectedText = selectedArea.getSelectedText();
+            if (selectedText == null || selectedText.isBlank()) {
+                continue;
+            }
 
-        int rowIndex = messageBox.getChildren().indexOf(parentRow);
-        if (rowIndex < 0) return;
+            Node lineContainerNode = selectedArea;
+            while (lineContainerNode != null
+                    && (!lineContainerNode.getStyleClass().contains("message-line-container")
+                    || !(lineContainerNode.getParent() instanceof VBox))) {
+                lineContainerNode = lineContainerNode.getParent();
+            }
+
+            if (lineContainerNode != null && lineContainerNode.getParent() instanceof VBox markdownContainer
+                    && markdownContainer.getStyleClass().contains("message-markdown")) {
+                return new SelectedLineContext(selectedText, lineContainerNode, markdownContainer, selectedArea);
+            }
+        }
+        return null;
+    }
+
+    private void insertInlineQuestion(SelectedLineContext selectedContext) {
+        VBox targetContainer = selectedContext.markdownContainer() instanceof VBox v ? v : null;
+        Node selectedLineNode = selectedContext.lineNode();
+        String selectedText = selectedContext.selectedText();
+
+        if (targetContainer == null || selectedLineNode == null) {
+            return;
+        }
+
+        VBox discussionGroup = new VBox(4);
+        discussionGroup.getStyleClass().add("inline-thread-group");
+
+        HBox discussionRow = new HBox(8);
+        discussionRow.getStyleClass().add("inline-discussion-row");
+
+        Region threadLine = new Region();
+        threadLine.getStyleClass().add("inline-thread-line");
 
         // Build inline discussion container
         VBox discussion = new VBox(6);
         discussion.getStyleClass().add("inline-discussion");
+        threadLine.prefHeightProperty().bind(discussion.heightProperty());
 
         // Quoted selection
         String displayText = selectedText.length() > 200
@@ -828,6 +914,13 @@ public class ChatController {
         quote.setWrapText(true);
         quote.setMaxWidth(500);
         quote.getStyleClass().add("inline-discussion-quote");
+
+        Button collapseThreadBtn = new Button("\u2212");
+        collapseThreadBtn.getStyleClass().add("inline-discussion-collapse-btn");
+        collapseThreadBtn.setFocusTraversable(false);
+
+        HBox headerRow = new HBox(8, quote, new Region(), collapseThreadBtn);
+        HBox.setHgrow(headerRow.getChildren().get(1), Priority.ALWAYS);
 
         // Question input
         TextField questionField = new TextField();
@@ -839,7 +932,29 @@ public class ChatController {
         VBox answerBox = new VBox(4);
         answerBox.getStyleClass().add("inline-discussion-answer");
 
-        discussion.getChildren().addAll(quote, questionField, answerBox);
+        discussion.getChildren().addAll(headerRow, questionField, answerBox);
+
+        Label collapsedPlaceholder = new Label("...");
+        collapsedPlaceholder.getStyleClass().add("inline-thread-placeholder");
+        collapsedPlaceholder.setVisible(false);
+        collapsedPlaceholder.setManaged(false);
+
+        collapseThreadBtn.setOnAction(e -> {
+            discussionRow.setVisible(false);
+            discussionRow.setManaged(false);
+            collapsedPlaceholder.setVisible(true);
+            collapsedPlaceholder.setManaged(true);
+        });
+
+        collapsedPlaceholder.setOnMouseClicked(e -> {
+            discussionRow.setVisible(true);
+            discussionRow.setManaged(true);
+            collapsedPlaceholder.setVisible(false);
+            collapsedPlaceholder.setManaged(false);
+        });
+
+        discussionRow.getChildren().addAll(threadLine, discussion);
+        discussionGroup.getChildren().addAll(discussionRow, collapsedPlaceholder);
 
         // Submit on Enter
         questionField.setOnKeyPressed(event -> {
@@ -851,23 +966,25 @@ public class ChatController {
                 event.consume();
             } else if (event.getCode() == KeyCode.ESCAPE) {
                 // Remove the discussion if user presses Escape without asking
-                messageBox.getChildren().remove(discussion);
+                targetContainer.getChildren().remove(discussionGroup);
                 event.consume();
             }
         });
 
-        // Insert after the parent row
-        int insertAt = Math.min(rowIndex + 1, messageBox.getChildren().size());
-        messageBox.getChildren().add(insertAt, discussion);
+        int lineIndex = targetContainer.getChildren().indexOf(selectedLineNode);
+        int insertIndex = lineIndex >= 0 ? lineIndex + 1 : targetContainer.getChildren().size();
+        targetContainer.getChildren().add(insertIndex, discussionGroup);
 
         // Focus and fade in
-        discussion.setOpacity(0);
-        FadeTransition ft = new FadeTransition(Duration.millis(200), discussion);
+        discussionGroup.setOpacity(0);
+        FadeTransition ft = new FadeTransition(Duration.millis(200), discussionGroup);
         ft.setFromValue(0);
         ft.setToValue(1);
         ft.play();
-        Platform.runLater(questionField::requestFocus);
+        scrollToBottom();
     }
+
+    private record SelectedLineContext(String selectedText, Node lineNode, Node markdownContainer, TextArea selectedArea) {}
 
     private void submitInlineQuestion(String selectedText, String question, VBox answerBox) {
         // Show loading indicator
@@ -941,10 +1058,11 @@ public class ChatController {
     private HBox createPlainTextBubble(Message msg) {
         HBox row = new HBox();
         row.getStyleClass().add("message-row");
+        row.setMaxWidth(Double.MAX_VALUE);
 
         Label content = new Label(msg.getContent() == null ? "" : msg.getContent());
         content.setWrapText(true);
-        content.setMaxWidth(520);
+        applyResponsiveMaxWidth(content);
         content.getStyleClass().add("message-text");
 
         // Add copy button for non-empty messages
@@ -978,6 +1096,7 @@ public class ChatController {
         } else {
             row.setAlignment(Pos.TOP_LEFT);
             bubble.getStyleClass().add("bot-bubble");
+            applyResponsivePrefWidth(bubble);
             row.getChildren().addAll(bubble, spacer);
         }
 
@@ -1042,59 +1161,33 @@ public class ChatController {
         return container;
     }
 
+    private Node buildCompactUserContent(String content) {
+        String text = content == null ? "" : content;
+        Label label = new Label(text);
+        label.setWrapText(true);
+        label.getStyleClass().add("message-text");
+        applyResponsiveMaxWidth(label);
+        return label;
+    }
+
     private Node createMarkdownBlock(String textValue) {
-        VBox block = new VBox(4);
-        block.getStyleClass().add("message-markdown");
-        block.setMaxWidth(520);
-        String[] lines = (textValue == null ? "" : textValue).split("\\R", -1);
+        String safeText = textValue == null ? "" : textValue;
+        VBox markdownBlock = new VBox(6);
+        markdownBlock.getStyleClass().add("message-markdown");
+        applyResponsiveMaxWidth(markdownBlock);
+        populateFormattedLines(markdownBlock, safeText);
 
-        for (String rawLine : lines) {
-            String line = rawLine == null ? "" : rawLine.trim();
-            if (line.isEmpty()) {
-                Region spacer = new Region();
-                spacer.setMinHeight(6);
-                block.getChildren().add(spacer);
-                continue;
-            }
-
-            Matcher headingMatcher = HEADING_PATTERN.matcher(line);
-            if (headingMatcher.matches()) {
-                int level = headingMatcher.group(1).length();
-                TextFlow headingFlow = createInlineTextFlow(headingMatcher.group(2));
-                headingFlow.getStyleClass().add("message-heading");
-                headingFlow.getStyleClass().add("message-heading-" + level);
-                block.getChildren().add(headingFlow);
-                continue;
-            }
-
-            Matcher orderedMatcher = ORDERED_LIST_PATTERN.matcher(line);
-            if (orderedMatcher.matches()) {
-                TextFlow orderedFlow = createInlineTextFlow(orderedMatcher.group(2));
-                orderedFlow.getStyleClass().add("message-list-item");
-                orderedFlow.getChildren().add(0, createStyledText(orderedMatcher.group(1) + ". ", "message-list-marker"));
-                block.getChildren().add(orderedFlow);
-                continue;
-            }
-
-            Matcher unorderedMatcher = UNORDERED_LIST_PATTERN.matcher(line);
-            if (unorderedMatcher.matches()) {
-                TextFlow unorderedFlow = createInlineTextFlow(unorderedMatcher.group(1));
-                unorderedFlow.getStyleClass().add("message-list-item");
-                unorderedFlow.getChildren().add(0, createStyledText("\u2022 ", "message-list-marker"));
-                block.getChildren().add(unorderedFlow);
-                continue;
-            }
-
-            block.getChildren().add(createInlineTextFlow(line));
+        if (markdownBlock.getChildren().isEmpty()) {
+            TextFlow empty = createInlineTextFlow(" ");
+            markdownBlock.getChildren().add(empty);
         }
-
-        return block;
+        return markdownBlock;
     }
 
     private TextFlow createInlineTextFlow(String textValue) {
         String safeText = textValue == null ? "" : textValue;
         TextFlow flow = new TextFlow();
-        flow.setMaxWidth(520);
+        applyResponsiveMaxWidth(flow);
         flow.getStyleClass().add("message-flow");
 
         Matcher matcher = INLINE_MARKDOWN_PATTERN.matcher(safeText);
@@ -1165,10 +1258,40 @@ public class ChatController {
         codeArea.setFocusTraversable(false);
         codeArea.setPrefRowCount(Math.max(3, code.lines().toList().size()));
         codeArea.getStyleClass().add("message-code");
+        applyResponsiveMaxWidth(codeArea);
 
         VBox codeBox = new VBox(6, header, codeArea);
         codeBox.getStyleClass().add("message-code-block");
+        applyResponsiveMaxWidth(codeBox);
         return codeBox;
+    }
+
+    private double computeMessageMaxWidth() {
+        if (messageBox == null) {
+            return 520;
+        }
+        double preferred = messageBox.getWidth() * MESSAGE_WIDTH_RATIO;
+        return Math.max(MESSAGE_MIN_WIDTH, Math.min(MESSAGE_MAX_WIDTH_CAP, preferred));
+    }
+
+    private void applyResponsiveMaxWidth(Region node) {
+        if (node == null || messageBox == null) {
+            return;
+        }
+        node.maxWidthProperty().bind(Bindings.createDoubleBinding(
+                this::computeMessageMaxWidth,
+                messageBox.widthProperty()
+        ));
+    }
+
+    private void applyResponsivePrefWidth(Region node) {
+        if (node == null || messageBox == null) {
+            return;
+        }
+        node.prefWidthProperty().bind(Bindings.createDoubleBinding(
+                this::computeMessageMaxWidth,
+                messageBox.widthProperty()
+        ));
     }
 
     private void copyCodeToClipboard(String code) {
@@ -1399,6 +1522,15 @@ public class ChatController {
 
     private RunResult runShellCommand(String command, RunningExecution execution) {
         try {
+            String shellPref = settingsManager.getString("terminal.defaultShell", "Cortex").trim().toLowerCase(Locale.ROOT);
+            if (isWindows() && ("cmd".equals(shellPref) || "powershell".equals(shellPref))) {
+                boolean launched = launchExternalShellWindow(shellPref, command);
+                if (!launched) {
+                    return new RunResult(-1, "[Run] Failed to open external " + shellPref + " window.", false);
+                }
+                return new RunResult(0, "[Run] Opened command in external " + shellPref + " window.", false);
+            }
+
             List<String> shellCommand = buildDefaultShellCommand(command);
             if (shellCommand == null || shellCommand.isEmpty()) {
                 return new RunResult(-1, "[Run] No default shell is available on this system.", false);
@@ -1406,6 +1538,24 @@ public class ChatController {
             return runShellProcess(shellCommand, terminalWorkingDirectory, execution);
         } catch (Exception ex) {
             return new RunResult(-1, "[Run] Failed to execute command: " + ex.getMessage(), false);
+        }
+    }
+
+    private boolean launchExternalShellWindow(String shell, String command) {
+        try {
+            List<String> launch;
+            if ("cmd".equals(shell)) {
+                launch = List.of("cmd", "/c", "start", "\"Cortex CMD\"", "cmd", "/k", command);
+            } else {
+                launch = List.of("cmd", "/c", "start", "\"Cortex PowerShell\"", "powershell", "-NoExit", "-Command", command);
+            }
+            ProcessBuilder builder = new ProcessBuilder(launch);
+            builder.directory(terminalWorkingDirectory.toFile());
+            builder.start();
+            return true;
+        } catch (Exception ex) {
+            appendTerminalLine("[Run] Could not open external shell window: " + ex.getMessage());
+            return false;
         }
     }
 
@@ -1459,6 +1609,26 @@ public class ChatController {
     }
 
     private List<String> buildDefaultShellCommand(String command) {
+        String shellPref = settingsManager.getString("terminal.defaultShell", "Cortex").trim().toLowerCase(Locale.ROOT);
+
+        return switch (shellPref) {
+            case "cmd" -> isWindows() ? List.of("cmd", "/c", command) : buildAutoShellCommand(command);
+            case "powershell" -> {
+                if (isCommandAvailable("pwsh")) {
+                    yield List.of("pwsh", "-NoProfile", "-Command", command);
+                }
+                if (isCommandAvailable("powershell")) {
+                    yield List.of("powershell", "-NoProfile", "-Command", command);
+                }
+                yield buildAutoShellCommand(command);
+            }
+            case "bash" -> isCommandAvailable("bash") ? List.of("bash", "-lc", command) : buildAutoShellCommand(command);
+            case "cortex" -> buildAutoShellCommand(command);
+            default -> buildAutoShellCommand(command);
+        };
+    }
+
+    private List<String> buildAutoShellCommand(String command) {
         if (isWindows()) {
             if (isCommandAvailable("pwsh")) {
                 return List.of("pwsh", "-NoProfile", "-Command", command);

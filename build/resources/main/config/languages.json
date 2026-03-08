@@ -43,7 +43,7 @@
     "aliases": ["cpp", "c++", "cc", "cxx", "c++11", "c++14", "c++17", "c++20", "c++23"],
     "compileCommand": "g++ {file} -o {output}",
     "command": "{output}",
-    "detectCommands": ["g++", "clang++", "c++"],
+    "detectCommands": ["g++", "clang++", "c++", "cl"],
     "needsCompilation": true,
     "timeout": 10
   },

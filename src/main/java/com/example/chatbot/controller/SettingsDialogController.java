@@ -3,19 +3,26 @@ package com.example.chatbot.controller;
 import com.example.chatbot.service.SettingsManager;
 import javafx.application.HostServices;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.function.Consumer;
 
 /**
@@ -23,8 +30,9 @@ import java.util.function.Consumer;
  * and reads/writes through SettingsManager.
  */
 public class SettingsDialogController {
+    private static final String APP_PROPERTIES_FILE = "app.properties";
 
-    @FXML private ListView<String> categoryList;
+    @FXML private ListView<SidebarEntry> categoryList;
     @FXML private StackPane pageContainer;
     @FXML private Button saveButton;
     @FXML private Button cancelButton;
@@ -33,17 +41,35 @@ public class SettingsDialogController {
     private final Map<String, VBox> pages = new LinkedHashMap<>();
     private Runnable onSave;
     private HostServices hostServices;
+    private DialogMode dialogMode = DialogMode.PREFERENCES;
 
     @FXML
     public void initialize() {
         buildPages();
-        categoryList.setItems(FXCollections.observableArrayList(pages.keySet()));
-        categoryList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> showPage(selected));
+        categoryList.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(SidebarEntry item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    return;
+                }
+                setText(item.label());
+            }
+        });
+
+        categoryList.setItems(buildSidebarEntries(dialogMode));
+        categoryList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
+            if (selected == null) {
+                return;
+            }
+            showPage(selected.pageName());
+        });
 
         saveButton.setOnAction(e -> doSave());
         cancelButton.setOnAction(e -> closeDialog());
 
-        categoryList.getSelectionModel().selectFirst();
+        selectFirstPage();
     }
 
     public void setOnSave(Runnable onSave) {
@@ -54,17 +80,49 @@ public class SettingsDialogController {
         this.hostServices = hostServices;
     }
 
+    public void setDialogMode(DialogMode dialogMode) {
+        this.dialogMode = dialogMode == null ? DialogMode.PREFERENCES : dialogMode;
+        if (categoryList != null) {
+            categoryList.setItems(buildSidebarEntries(this.dialogMode));
+            selectFirstPage();
+        }
+    }
+
     // ================= PAGE FACTORY =================
     private void buildPages() {
         pages.put("Appearance", buildAppearancePage());
         pages.put("Chat Behavior", buildChatPage());
+        pages.put("Privacy", buildPrivacyPage());
+        pages.put("Advanced", buildAdvancedPage());
+
         pages.put("Code Execution", buildExecutionPage());
         pages.put("Terminal", buildTerminalPage());
         pages.put("Language Runtime", buildRuntimePage());
         pages.put("AI Model", buildAIPage());
-        pages.put("Privacy", buildPrivacyPage());
-        pages.put("Advanced", buildAdvancedPage());
-        pages.put("About", buildAboutPage());
+    }
+
+    private ObservableList<SidebarEntry> buildSidebarEntries(DialogMode mode) {
+        if (mode == DialogMode.SETTINGS) {
+            return FXCollections.observableArrayList(
+                    SidebarEntry.page("Code Execution"),
+                    SidebarEntry.page("Terminal"),
+                    SidebarEntry.page("Language Runtime"),
+                    SidebarEntry.page("AI Model")
+            );
+        }
+        return FXCollections.observableArrayList(
+                SidebarEntry.page("Appearance"),
+                SidebarEntry.page("Chat Behavior"),
+                SidebarEntry.page("Privacy"),
+                SidebarEntry.page("Advanced")
+        );
+    }
+
+    private void selectFirstPage() {
+        for (SidebarEntry entry : categoryList.getItems()) {
+            categoryList.getSelectionModel().select(entry);
+            return;
+        }
     }
 
     private void showPage(String name) {
@@ -88,6 +146,47 @@ public class SettingsDialogController {
         page.getChildren().add(createSpinnerRow("Chat Font Size", "appearance.chatFontSize", 8, 24, settings.getInt("appearance.chatFontSize", 14)));
         page.getChildren().add(createSpinnerRow("Code Block Font Size", "appearance.codeFontSize", 8, 24, settings.getInt("appearance.codeFontSize", 13)));
         page.getChildren().add(createSpinnerRow("Terminal Font Size", "appearance.terminalFontSize", 8, 24, settings.getInt("appearance.terminalFontSize", 13)));
+
+        CheckBox blurEnabled = new CheckBox();
+        blurEnabled.setSelected(settings.getBoolean("appearance.modalBlurEnabled", true));
+        blurEnabled.getStyleClass().add("settings-checkbox");
+
+        HBox blurToggleRow = new HBox(12);
+        blurToggleRow.setAlignment(Pos.CENTER_LEFT);
+        Label blurToggleLabel = new Label("Blur background when dialogs open");
+        blurToggleLabel.setMinWidth(200);
+        blurToggleLabel.getStyleClass().add("settings-label");
+        Region blurToggleSpacer = new Region();
+        HBox.setHgrow(blurToggleSpacer, Priority.ALWAYS);
+        blurToggleRow.getChildren().addAll(blurToggleLabel, blurToggleSpacer, blurEnabled);
+        blurToggleRow.setUserData(new SettingBinding("appearance.modalBlurEnabled", blurEnabled::isSelected));
+        page.getChildren().add(blurToggleRow);
+
+        HBox blurLevelRow = new HBox(12);
+        blurLevelRow.setAlignment(Pos.CENTER_LEFT);
+        Label blurLevelLabel = new Label("Dialog blur level");
+        blurLevelLabel.setMinWidth(140);
+        blurLevelLabel.getStyleClass().add("settings-label");
+        Slider blurLevelSlider = new Slider(0, 12.0, settings.getDouble("appearance.modalBlurRadius", 5.5));
+        blurLevelSlider.setMajorTickUnit(3);
+        blurLevelSlider.setMinorTickCount(2);
+        blurLevelSlider.setShowTickLabels(true);
+        blurLevelSlider.setShowTickMarks(true);
+        blurLevelSlider.getStyleClass().add("settings-slider");
+        blurLevelSlider.disableProperty().bind(blurEnabled.selectedProperty().not());
+        HBox.setHgrow(blurLevelSlider, Priority.ALWAYS);
+        Label blurLevelValue = new Label(String.format("%.1f", blurLevelSlider.getValue()));
+        blurLevelValue.getStyleClass().add("settings-value");
+        blurLevelValue.setMinWidth(34);
+        blurLevelSlider.valueProperty().addListener((obs, o, n) -> blurLevelValue.setText(String.format("%.1f", n.doubleValue())));
+        blurLevelRow.getChildren().addAll(blurLevelLabel, blurLevelSlider, blurLevelValue);
+        blurLevelRow.setUserData(new SettingBinding("appearance.modalBlurRadius", blurLevelSlider::getValue));
+        page.getChildren().add(blurLevelRow);
+
+        Label blurHint = new Label("Set to 0.0 for no blur while keeping dialogs functional.");
+        blurHint.setWrapText(true);
+        blurHint.getStyleClass().add("settings-hint");
+        page.getChildren().add(blurHint);
         return page;
     }
 
@@ -117,8 +216,8 @@ public class SettingsDialogController {
     private VBox buildTerminalPage() {
         VBox page = createPage("Terminal");
         page.getChildren().add(createComboRow("Default shell", "terminal.defaultShell",
-                new String[]{"cmd", "powershell", "bash"},
-                settings.getString("terminal.defaultShell", "powershell")));
+            new String[]{"Cortex", "cmd", "powershell", "bash"},
+            settings.getString("terminal.defaultShell", "Cortex")));
         page.getChildren().add(createToggleRow("Clear terminal before running code", "terminal.clearBeforeRun", settings.getBoolean("terminal.clearBeforeRun", false)));
         page.getChildren().add(createSpinnerRow("Scrollback buffer size", "terminal.scrollbackSize", 1000, 100000, settings.getInt("terminal.scrollbackSize", 10000)));
         page.getChildren().add(createToggleRow("Show execution time", "terminal.showExecutionTime", settings.getBoolean("terminal.showExecutionTime", true)));
@@ -143,6 +242,25 @@ public class SettingsDialogController {
     // ================= AI MODEL =================
     private VBox buildAIPage() {
         VBox page = createPage("AI Model");
+
+        page.getChildren().add(createSecretFieldRow(
+            "API key",
+            "ai.apiKey",
+            settings.getString("ai.apiKey", ""),
+            "sk-..."
+        ));
+        page.getChildren().add(createTextFieldRow(
+            "Base URL",
+            "ai.baseUrl",
+            settings.getString("ai.baseUrl", "https://api.openai.com"),
+            "https://api.openai.com"
+        ));
+        page.getChildren().add(createTextFieldRow(
+            "Model name",
+            "ai.modelName",
+            settings.getString("ai.modelName", "gpt-4.1-mini"),
+            "gpt-4.1-mini"
+        ));
 
         // Temperature slider 0.0 – 2.0
         HBox tempRow = new HBox(12);
@@ -182,6 +300,41 @@ public class SettingsDialogController {
         return page;
     }
 
+    private HBox createTextFieldRow(String label, String key, String current, String prompt) {
+        HBox row = new HBox(12);
+        row.setAlignment(Pos.CENTER_LEFT);
+        Label lbl = new Label(label);
+        lbl.setMinWidth(200);
+        lbl.getStyleClass().add("settings-label");
+
+        TextField field = new TextField(current == null ? "" : current);
+        field.setPromptText(prompt == null ? "" : prompt);
+        field.getStyleClass().add("settings-text-field");
+        HBox.setHgrow(field, Priority.ALWAYS);
+
+        row.getChildren().addAll(lbl, field);
+        row.setUserData(new SettingBinding(key, field::getText));
+        return row;
+    }
+
+    private HBox createSecretFieldRow(String label, String key, String current, String prompt) {
+        HBox row = new HBox(12);
+        row.setAlignment(Pos.CENTER_LEFT);
+        Label lbl = new Label(label);
+        lbl.setMinWidth(200);
+        lbl.getStyleClass().add("settings-label");
+
+        PasswordField field = new PasswordField();
+        field.setText(current == null ? "" : current);
+        field.setPromptText(prompt == null ? "" : prompt);
+        field.getStyleClass().add("settings-text-field");
+        HBox.setHgrow(field, Priority.ALWAYS);
+
+        row.getChildren().addAll(lbl, field);
+        row.setUserData(new SettingBinding(key, field::getText));
+        return row;
+    }
+
     // ================= PRIVACY =================
     private VBox buildPrivacyPage() {
         VBox page = createPage("Privacy");
@@ -212,37 +365,6 @@ public class SettingsDialogController {
         VBox page = createPage("Advanced");
         page.getChildren().add(createToggleRow("Enable debug logs", "advanced.debugLogs", settings.getBoolean("advanced.debugLogs", false)));
         page.getChildren().add(createToggleRow("Enable experimental features", "advanced.experimentalFeatures", settings.getBoolean("advanced.experimentalFeatures", false)));
-        return page;
-    }
-
-    // ================= ABOUT =================
-    private VBox buildAboutPage() {
-        VBox page = createPage("About");
-
-        page.getChildren().add(createInfoRow("Application", "Cortex"));
-        page.getChildren().add(createInfoRow("Version", "1.0.0"));
-        page.getChildren().add(createInfoRow("Developer", "Cortex Team"));
-
-        Hyperlink gitLink = new Hyperlink("https://github.com/cortex-app/cortex");
-        gitLink.getStyleClass().add("settings-link");
-        gitLink.setOnAction(e -> {
-            if (hostServices != null) {
-                hostServices.showDocument(gitLink.getText());
-            }
-        });
-        HBox linkRow = new HBox(12);
-        linkRow.setAlignment(Pos.CENTER_LEFT);
-        Label linkLabel = new Label("Repository");
-        linkLabel.setMinWidth(140);
-        linkLabel.getStyleClass().add("settings-label");
-        linkRow.getChildren().addAll(linkLabel, gitLink);
-        page.getChildren().add(linkRow);
-
-        Button updateButton = new Button("Check for Updates");
-        updateButton.getStyleClass().add("settings-action-button");
-        updateButton.setOnAction(e -> showSettingsToast(updateButton, "You are running the latest version."));
-        page.getChildren().add(updateButton);
-
         return page;
     }
 
@@ -335,24 +457,13 @@ public class SettingsDialogController {
         return row;
     }
 
-    private HBox createInfoRow(String label, String value) {
-        HBox row = new HBox(12);
-        row.setAlignment(Pos.CENTER_LEFT);
-        Label lbl = new Label(label);
-        lbl.setMinWidth(140);
-        lbl.getStyleClass().add("settings-label");
-        Label val = new Label(value);
-        val.getStyleClass().add("settings-value");
-        row.getChildren().addAll(lbl, val);
-        return row;
-    }
-
     // ================= SAVE / CLOSE =================
     private void doSave() {
         // Walk through all pages and collect values
         for (VBox page : pages.values()) {
             collectBindings(page);
         }
+        persistAiConfigToResourceProperties();
         settings.save();
         if (onSave != null) {
             onSave.run();
@@ -377,6 +488,52 @@ public class SettingsDialogController {
         stage.close();
     }
 
+    private void persistAiConfigToResourceProperties() {
+        Path resourcePath = resolveResourceAppPropertiesPath();
+        if (resourcePath == null) {
+            return;
+        }
+
+        Properties properties = new Properties();
+        if (Files.isRegularFile(resourcePath)) {
+            try (InputStream input = Files.newInputStream(resourcePath)) {
+                properties.load(input);
+            } catch (IOException ignored) {
+                // Keep best-effort behavior and overwrite using current settings values.
+            }
+        }
+
+        properties.setProperty("past_api", settings.getString("ai.apiKey", "").trim());
+        properties.setProperty("openai_base_url", settings.getString("ai.baseUrl", "https://api.openai.com").trim());
+        properties.setProperty("openai_model", settings.getString("ai.modelName", "gpt-4.1-mini").trim());
+
+        try {
+            Files.createDirectories(resourcePath.getParent());
+            try (OutputStream output = Files.newOutputStream(resourcePath)) {
+                properties.store(output, "Updated from Settings > AI Model");
+            }
+        } catch (IOException ignored) {
+            // Avoid blocking Save if resource file write fails.
+        }
+    }
+
+    private Path resolveResourceAppPropertiesPath() {
+        try {
+            Path userDir = Paths.get(System.getProperty("user.dir", ".")).toAbsolutePath().normalize();
+            Path projectDir;
+            if ("ai-project".equalsIgnoreCase(userDir.getFileName() != null ? userDir.getFileName().toString() : "")) {
+                projectDir = userDir;
+            } else {
+                Path nested = userDir.resolve("ai-project");
+                projectDir = Files.isDirectory(nested) ? nested : userDir;
+            }
+            return projectDir.resolve("src").resolve("main").resolve("resources").resolve(APP_PROPERTIES_FILE)
+                    .toAbsolutePath().normalize();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     private void showSettingsToast(Node anchor, String message) {
         Tooltip tip = new Tooltip(message);
         tip.setAutoHide(true);
@@ -390,4 +547,15 @@ public class SettingsDialogController {
 
     // ================= BINDING RECORD =================
     private record SettingBinding(String key, java.util.function.Supplier<Object> valueGetter) {}
+
+    private record SidebarEntry(String label, String pageName, boolean groupHeader) {
+        private static SidebarEntry page(String name) {
+            return new SidebarEntry(name, name, false);
+        }
+    }
+
+    public enum DialogMode {
+        PREFERENCES,
+        SETTINGS
+    }
 }

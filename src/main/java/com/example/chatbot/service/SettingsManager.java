@@ -45,6 +45,8 @@ public final class SettingsManager {
         putDefault("appearance.chatFontSize", 14);
         putDefault("appearance.codeFontSize", 13);
         putDefault("appearance.terminalFontSize", 13);
+        putDefault("appearance.modalBlurEnabled", true);
+        putDefault("appearance.modalBlurRadius", 5.5);
 
         // Chat Behavior
         putDefault("chat.responseStyle", "Detailed");
@@ -59,7 +61,7 @@ public final class SettingsManager {
         putDefault("execution.confirmBeforeRun", false);
 
         // Terminal
-        putDefault("terminal.defaultShell", "powershell");
+        putDefault("terminal.defaultShell", "Cortex");
         putDefault("terminal.clearBeforeRun", false);
         putDefault("terminal.scrollbackSize", 10000);
         putDefault("terminal.showExecutionTime", true);
@@ -71,6 +73,9 @@ public final class SettingsManager {
         putDefault("runtime.gccPath", "");
 
         // AI Model
+        putDefault("ai.apiKey", "");
+        putDefault("ai.baseUrl", "https://api.openai.com");
+        putDefault("ai.modelName", "gpt-4.1-mini");
         putDefault("ai.temperature", 0.4);
         putDefault("ai.maxTokens", 4096);
         putDefault("ai.systemPrompt", "");

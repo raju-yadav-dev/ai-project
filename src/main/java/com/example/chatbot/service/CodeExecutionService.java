@@ -93,9 +93,6 @@ public class CodeExecutionService {
 
             List<String> command = buildInterpretedCommand(resolvedCmd, lang, scriptFile);
 
-            appendLine("Command: " + String.join(" ", command));
-            appendLine("");
-
             long start = System.nanoTime();
             RunProcessResult result = runProcess(command, tempDir, handle, timeoutSeconds);
             double elapsed = (System.nanoTime() - start) / 1_000_000_000.0;
@@ -156,9 +153,6 @@ public class CodeExecutionService {
 
             // Compile
             List<String> compileCmd = List.of("javac", sourceFile.toAbsolutePath().toString());
-            appendLine("Command: " + String.join(" ", compileCmd));
-            appendLine("");
-
             long start = System.nanoTime();
             RunProcessResult compileResult = runProcess(compileCmd, tempDir, handle, timeoutSeconds);
             if (compileResult.exitCode != 0) {
@@ -170,9 +164,6 @@ public class CodeExecutionService {
 
             // Run
             List<String> runCmd = List.of("java", "-cp", tempDir.toAbsolutePath().toString(), className);
-            appendLine("Command: " + String.join(" ", runCmd));
-            appendLine("");
-
             RunProcessResult runResult = runProcess(runCmd, tempDir, handle, timeoutSeconds);
             double elapsed = (System.nanoTime() - start) / 1_000_000_000.0;
 
@@ -204,9 +195,6 @@ public class CodeExecutionService {
 
             // Compile
             List<String> compileCmd = buildCCompileCommand(resolvedCompiler, sourceFile, binaryFile);
-            appendLine("Command: " + String.join(" ", compileCmd));
-            appendLine("");
-
             long start = System.nanoTime();
             RunProcessResult compileResult = runProcess(compileCmd, tempDir, handle, timeoutSeconds);
             if (compileResult.exitCode != 0) {
@@ -218,9 +206,6 @@ public class CodeExecutionService {
 
             // Run
             List<String> runCmd = List.of(binaryFile.toAbsolutePath().toString());
-            appendLine("Command: " + String.join(" ", runCmd));
-            appendLine("");
-
             RunProcessResult runResult = runProcess(runCmd, tempDir, handle, timeoutSeconds);
             double elapsed = (System.nanoTime() - start) / 1_000_000_000.0;
 

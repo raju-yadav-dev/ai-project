@@ -2,10 +2,13 @@ package com.example.chatbot.controller;
 
 import com.example.chatbot.model.Conversation;
 import com.example.chatbot.service.ChatService;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.Label;
@@ -26,12 +29,15 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.PopupWindow;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.geometry.Rectangle2D;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -133,6 +139,10 @@ public class MainController {
     private String committedThemeKey;
     private final Map<RadioMenuItem, String> themeMenuBindings = new LinkedHashMap<>();
     private final SettingsManager settingsManager = SettingsManager.getInstance();
+    private final GaussianBlur modalBlur = new GaussianBlur(0);
+    private Region modalOverlay;
+    private Timeline modalBackdropTimeline;
+    private int modalDepth;
 
     // ================= INITIALIZATION =================
     @FXML
@@ -339,7 +349,6 @@ public class MainController {
             appShell.getStyleClass().remove("maximized");
             windowRoot.getStyleClass().remove("maximized");
                 if (windowRootClip != null) {
-                    windowRootClip.setArcWidth(maximized ? 0 : 32);
                     windowRootClip.setArcHeight(maximized ? 0 : 32);
                 }
         }
@@ -349,37 +358,20 @@ public class MainController {
         }
     }
 
-    // ================= ROUNDED SHELL CLIP =================
-    private void applyRoundedClip() {
-            // Clip windowRoot to prevent black corners in dark mode
-            windowRootClip = new Rectangle();
-            windowRootClip.setArcWidth(32);
-            windowRootClip.setArcHeight(32);
-            windowRootClip.widthProperty().bind(windowRoot.widthProperty());
-            windowRootClip.heightProperty().bind(windowRoot.heightProperty());
-            windowRoot.setClip(windowRootClip);
-        
-            // Clip appShell for consistent rounded corners
-        shellClip = new Rectangle();
-        shellClip.setArcWidth(32);
-        shellClip.setArcHeight(32);
-        shellClip.widthProperty().bind(appShell.widthProperty());
-        shellClip.heightProperty().bind(appShell.heightProperty());
-        appShell.setClip(shellClip);
-    }
-
-    // ================= CONVERSATION ACTIONS =================
     private void createNewConversation() {
-        Conversation conv = chatService.createConversation();
-        int insertIndex = getPinnedSectionSize();
-        chatList.getItems().add(insertIndex, conv);
-        chatList.getSelectionModel().select(conv);
+        Conversation conversation = chatService.createConversation();
+        chatList.getItems().add(conversation);
+        reorderConversations();
+        chatList.getSelectionModel().select(conversation);
+        loadConversation(conversation);
+        chatList.refresh();
     }
 
     private void deleteConversation(Conversation conversation) {
-        if (conversation == null) {
+        if (conversation == null || chatList == null) {
             return;
         }
+
         List<Conversation> items = chatList.getItems();
         int index = items.indexOf(conversation);
         if (index < 0) {
@@ -460,6 +452,25 @@ public class MainController {
         }
     }
 
+    private void applyRoundedClip() {
+        if (windowRoot != null) {
+            windowRootClip = new Rectangle();
+            windowRootClip.setArcWidth(32);
+            windowRootClip.setArcHeight(32);
+            windowRootClip.widthProperty().bind(windowRoot.widthProperty());
+            windowRootClip.heightProperty().bind(windowRoot.heightProperty());
+            windowRoot.setClip(windowRootClip);
+        }
+        if (appShell != null) {
+            shellClip = new Rectangle();
+            shellClip.setArcWidth(32);
+            shellClip.setArcHeight(32);
+            shellClip.widthProperty().bind(appShell.widthProperty());
+            shellClip.heightProperty().bind(appShell.heightProperty());
+            appShell.setClip(shellClip);
+        }
+    }
+
     // ================= POPUP ROUNDED CORNERS =================
     private void fixPopupTransparency() {
         // On Windows, popup windows (context menus) have a native opaque rectangular
@@ -469,13 +480,15 @@ public class MainController {
             while (change.next()) {
                 if (change.wasAdded()) {
                     for (Window w : change.getAddedSubList()) {
-                        if (w instanceof javafx.stage.PopupWindow) {
-                            if (w.getScene() != null) {
-                                w.getScene().setFill(Color.TRANSPARENT);
+                        if (w instanceof PopupWindow popup) {
+                            if (popup.getScene() != null) {
+                                stylePopupWindow(popup);
+                                Platform.runLater(() -> stylePopupWindow(popup));
                             }
                             w.sceneProperty().addListener((obs, oldScene, newScene) -> {
                                 if (newScene != null) {
-                                    newScene.setFill(Color.TRANSPARENT);
+                                    stylePopupWindow(popup);
+                                    Platform.runLater(() -> stylePopupWindow(popup));
                                 }
                             });
                         }
@@ -485,9 +498,115 @@ public class MainController {
         });
         // Also handle any popups already open
         for (Window w : Window.getWindows()) {
-            if (w instanceof javafx.stage.PopupWindow && w.getScene() != null) {
-                w.getScene().setFill(Color.TRANSPARENT);
+            if (w instanceof PopupWindow popup && w.getScene() != null) {
+                stylePopupWindow(popup);
+                Platform.runLater(() -> stylePopupWindow(popup));
             }
+        }
+    }
+
+    private void stylePopupWindow(PopupWindow popup) {
+        if (popup == null || popup.getScene() == null) {
+            return;
+        }
+        Parent popupRoot = popup.getScene().getRoot();
+        if (popupRoot == null) {
+            return;
+        }
+
+        boolean isComboPopup = popupRoot.getStyleClass().contains("combo-box-popup")
+                || popupRoot.lookup(".combo-box-popup") != null;
+
+        if (isComboPopup) {
+            String modeClass = THEME_MODE.getOrDefault(committedThemeKey, "theme-dark");
+            popupRoot.getStyleClass().removeAll("theme-dark", "theme-light");
+            popupRoot.getStyleClass().add(modeClass);
+            // Keep popup scene transparent so no rectangular frame appears behind
+            // the curved dropdown list view.
+            popup.getScene().setFill(Color.TRANSPARENT);
+        } else {
+            popup.getScene().setFill(Color.TRANSPARENT);
+        }
+    }
+
+    private void ensureModalOverlay() {
+        if (windowRoot == null || modalOverlay != null) {
+            return;
+        }
+        Region overlay = new Region();
+        overlay.getStyleClass().add("modal-overlay");
+        overlay.setManaged(false);
+        overlay.setVisible(false);
+        overlay.setOpacity(0);
+        // Never intercept pointer events intended for dialog controls.
+        overlay.setMouseTransparent(true);
+        overlay.prefWidthProperty().bind(windowRoot.widthProperty());
+        overlay.prefHeightProperty().bind(windowRoot.heightProperty());
+        windowRoot.getChildren().add(overlay);
+        modalOverlay = overlay;
+    }
+
+    private void setModalBackdropActive(boolean active) {
+        if (windowRoot == null || appShell == null) {
+            return;
+        }
+        ensureModalOverlay();
+        if (modalOverlay == null) {
+            return;
+        }
+
+        if (active) {
+            modalDepth++;
+            if (modalDepth > 1) {
+                return;
+            }
+            boolean blurEnabled = settingsManager.getBoolean("appearance.modalBlurEnabled", true);
+            double blurRadius = Math.max(0.0, Math.min(12.0, settingsManager.getDouble("appearance.modalBlurRadius", 5.5)));
+            double overlayOpacity = blurEnabled && blurRadius > 0.0 ? 0.24 : 0.0;
+            if (!windowRoot.getChildren().contains(modalOverlay)) {
+                windowRoot.getChildren().add(modalOverlay);
+            }
+            modalOverlay.toFront();
+            modalOverlay.setVisible(true);
+            appShell.setEffect(modalBlur);
+            animateBackdrop(blurEnabled ? blurRadius : 0.0, overlayOpacity, null);
+            return;
+        }
+
+        if (modalDepth == 0) {
+            return;
+        }
+        modalDepth--;
+        if (modalDepth > 0) {
+            return;
+        }
+        animateBackdrop(0.0, 0.0, () -> {
+            modalOverlay.setVisible(false);
+            appShell.setEffect(null);
+        });
+    }
+
+    private void animateBackdrop(double blurRadius, double overlayOpacity, Runnable onFinished) {
+        if (modalBackdropTimeline != null) {
+            modalBackdropTimeline.stop();
+        }
+        modalBackdropTimeline = new Timeline(
+                new KeyFrame(Duration.millis(170),
+                        new javafx.animation.KeyValue(modalBlur.radiusProperty(), blurRadius),
+                        new javafx.animation.KeyValue(modalOverlay.opacityProperty(), overlayOpacity))
+        );
+        if (onFinished != null) {
+            modalBackdropTimeline.setOnFinished(e -> onFinished.run());
+        }
+        modalBackdropTimeline.play();
+    }
+
+    private void showDialogWithBackdrop(Stage dialog) {
+        setModalBackdropActive(true);
+        try {
+            dialog.showAndWait();
+        } finally {
+            setModalBackdropActive(false);
         }
     }
 
@@ -599,10 +718,20 @@ public class MainController {
     // ================= PREFERENCES DIALOG =================
     @FXML
     private void openPreferences() {
+        openSettingsDialog("Preferences", SettingsDialogController.DialogMode.PREFERENCES);
+    }
+
+    @FXML
+    private void openSettings() {
+        openSettingsDialog("Settings", SettingsDialogController.DialogMode.SETTINGS);
+    }
+
+    private void openSettingsDialog(String dialogTitle, SettingsDialogController.DialogMode mode) {
         try {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/settings.fxml"));
             javafx.scene.Parent root = loader.load();
             SettingsDialogController controller = loader.getController();
+            controller.setDialogMode(mode);
             controller.setOnSave(this::applySettingsFromManager);
             try {
                 javafx.application.HostServices hs = (javafx.application.HostServices)
@@ -614,10 +743,10 @@ public class MainController {
             dialog.initOwner(stage);
             dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             dialog.initStyle(javafx.stage.StageStyle.TRANSPARENT);
-            dialog.setTitle("Preferences");
+            dialog.setTitle(dialogTitle);
 
             // Custom title bar with close button
-            Label titleLabel = new Label("Preferences");
+            Label titleLabel = new Label(dialogTitle);
             titleLabel.getStyleClass().add("settings-title-label");
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -664,7 +793,7 @@ public class MainController {
             }
             dialog.setScene(scene);
             dialog.setResizable(false);
-            dialog.showAndWait();
+            showDialogWithBackdrop(dialog);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -868,47 +997,59 @@ public class MainController {
 
     @FXML
     private void handleLogout() {
-        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
-                javafx.scene.control.Alert.AlertType.CONFIRMATION,
-                "Are you sure you want to logout?",
-                javafx.scene.control.ButtonType.YES,
-                javafx.scene.control.ButtonType.NO);
-        alert.setTitle("Logout");
-        alert.setHeaderText(null);
-        alert.initOwner(stage);
-        alert.showAndWait().ifPresent(response -> {
-            if (response == javafx.scene.control.ButtonType.YES) {
-                // Clear session state — future auth integration point
-                settingsManager.set("profile.name", "Cortex User");
-                settingsManager.set("profile.email", "user@example.com");
-                settingsManager.save();
-            }
+        Label icon = new Label("!");
+        icon.getStyleClass().add("logout-confirm-icon");
+
+        Label title = new Label("Confirm Logout");
+        title.getStyleClass().add("logout-confirm-title");
+
+        Label message = new Label("Are you sure you want to logout from this session?");
+        message.setWrapText(true);
+        message.getStyleClass().add("logout-confirm-message");
+
+        Button noButton = new Button("Cancel");
+        noButton.getStyleClass().add("logout-confirm-no");
+
+        Button yesButton = new Button("Logout");
+        yesButton.getStyleClass().add("logout-confirm-yes");
+
+        HBox actions = new HBox(10, noButton, yesButton);
+        actions.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        actions.getStyleClass().add("logout-confirm-actions");
+
+        HBox header = new HBox(12, icon, title);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        VBox content = new VBox(14, header, message, actions);
+        content.getStyleClass().add("logout-confirm-root");
+        content.setPadding(new javafx.geometry.Insets(20, 24, 20, 24));
+
+        javafx.stage.Stage dialog = createStyledDialog("Logout", content, 420, 220, null);
+        final boolean[] confirmed = {false};
+
+        noButton.setOnAction(e -> dialog.close());
+        yesButton.setOnAction(e -> {
+            confirmed[0] = true;
+            dialog.close();
         });
+
+        showDialogWithBackdrop(dialog);
+
+        if (confirmed[0]) {
+            // Clear session state — future auth integration point
+            settingsManager.set("profile.name", "Cortex User");
+            settingsManager.set("profile.email", "user@example.com");
+            settingsManager.save();
+        }
     }
 
     // ================= ABOUT DIALOG =================
     @FXML
     private void openAbout() {
-        Label appName = new Label("Cortex");
-        appName.getStyleClass().add("about-app-name");
-
-        Label versionLabel = new Label("Version: 1.0.0");
-        versionLabel.getStyleClass().add("about-version");
-
-        javafx.scene.control.Button updateBtn = new javafx.scene.control.Button("Check for Updates");
-        updateBtn.getStyleClass().add("about-update-button");
-        updateBtn.setOnAction(e -> {
-            updateBtn.setText("\u2713 You are running the latest version.");
-            updateBtn.setDisable(true);
-        });
-
-        VBox content = new VBox(14, appName, versionLabel, updateBtn);
-        content.getStyleClass().add("about-dialog-root");
-        content.setAlignment(javafx.geometry.Pos.CENTER);
-        content.setPadding(new javafx.geometry.Insets(28, 36, 28, 36));
+        VBox content = AboutSectionView.createAboutContent(null);
 
         javafx.stage.Stage dialog = createStyledDialog("About Cortex", content, 360, 260, null);
-        dialog.showAndWait();
+        showDialogWithBackdrop(dialog);
     }
 
     private void applySettingsFromManager() {
