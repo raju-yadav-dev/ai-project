@@ -6,6 +6,7 @@ on:
 jobs:
 
   build:
+
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
@@ -23,7 +24,7 @@ jobs:
           java-version: 21
 
 
-      - name: Install Linux packaging tools
+      - name: Install Linux tools
         if: runner.os == 'Linux'
         run: |
           sudo apt update
@@ -35,16 +36,99 @@ jobs:
         run: chmod +x gradlew
 
 
-      - name: Build project
+      - name: Build JAR
         run: ./gradlew clean build
 
 
-      - name: Create installers
-        run: ./gradlew jpackage
+      - name: Find JAR
+        id: jar
+        shell: bash
+        run: |
+          JAR=$(ls build/libs/*.jar | head -n 1)
+          echo "jar=$JAR" >> $GITHUB_OUTPUT
 
+
+# ---------------- WINDOWS ----------------
+
+      - name: Build Windows installers
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir dist
+
+          jpackage \
+            --name Cortex \
+            --input build/libs \
+            --main-jar $(basename ${{ steps.jar.outputs.jar }}) \
+            --type exe \
+            --dest dist \
+            --win-shortcut \
+            --win-menu \
+            --win-menu-group Cortex
+
+          jpackage \
+            --name Cortex \
+            --input build/libs \
+            --main-jar $(basename ${{ steps.jar.outputs.jar }}) \
+            --type msi \
+            --dest dist \
+            --win-shortcut \
+            --win-menu \
+            --win-menu-group Cortex
+
+
+# ---------------- LINUX ----------------
+
+      - name: Build Linux installers
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          mkdir dist
+
+          jpackage \
+            --name cortex \
+            --input build/libs \
+            --main-jar $(basename ${{ steps.jar.outputs.jar }}) \
+            --type deb \
+            --dest dist \
+            --linux-shortcut
+
+          jpackage \
+            --name cortex \
+            --input build/libs \
+            --main-jar $(basename ${{ steps.jar.outputs.jar }}) \
+            --type rpm \
+            --dest dist \
+            --linux-shortcut
+
+
+# ---------------- MAC ----------------
+
+      - name: Build macOS installers
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          mkdir dist
+
+          jpackage \
+            --name Cortex \
+            --input build/libs \
+            --main-jar $(basename ${{ steps.jar.outputs.jar }}) \
+            --type dmg \
+            --dest dist
+
+          jpackage \
+            --name Cortex \
+            --input build/libs \
+            --main-jar $(basename ${{ steps.jar.outputs.jar }}) \
+            --type pkg \
+            --dest dist
+
+
+# ---------------- UPLOAD ----------------
 
       - name: Upload installers
         uses: actions/upload-artifact@v4
         with:
           name: cortex-${{ runner.os }}
-          path: build/jpackage/*
+          path: dist/*
