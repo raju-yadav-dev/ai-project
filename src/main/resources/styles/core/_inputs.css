@@ -1,5 +1,5 @@
 /* ============================================================================ */
-/* CORTEX - INPUT FIELD STYLES (Structure Only) */
+/* Altarix - INPUT FIELD STYLES (Structure Only) */
 /* ============================================================================ */
 
 /* Composer Container */
@@ -90,3 +90,4 @@
 .search-field:focused {
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0), 10, 0.2, 0, 0);
 }
+

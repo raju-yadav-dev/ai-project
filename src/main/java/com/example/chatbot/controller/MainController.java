@@ -3,7 +3,7 @@ package com.example.chatbot.controller;
 import com.example.chatbot.model.Conversation;
 import com.example.chatbot.service.AuthApiClient;
 import com.example.chatbot.service.ChatService;
-import com.cortex.util.IconResources;
+import com.altarix.util.IconResources;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -340,7 +340,7 @@ public class MainController {
         if (appShell == null || windowRoot == null) {
             return;
         }
-        // Update maximize button icon: □ (maximize) ↔ ❐ (restore)
+        // Update maximize button icon: â–¡ (maximize) â†” â (restore)
         if (maximizeButton != null) {
             maximizeButton.setText(maximized ? "\u2750" : "\u25A1");
         }
@@ -681,10 +681,10 @@ public class MainController {
             String text = item.getText();
             if (text == null) continue;
             switch (text) {
-                case "Preferences" -> item.setGraphic(createMenuIcon("\u2699")); // ⚙ (but different from gear button)
-                case "Themes" -> item.setGraphic(createMenuIcon("\uD83C\uDFA8")); // 🎨
-                case "Settings" -> item.setGraphic(createMenuIcon("\uD83D\uDD27")); // 🔧
-                case "About" -> item.setGraphic(createMenuIcon("\u2139")); // ℹ
+                case "Preferences" -> item.setGraphic(createMenuIcon("\u2699")); // âš™ (but different from gear button)
+                case "Themes" -> item.setGraphic(createMenuIcon("\uD83C\uDFA8")); // ðŸŽ¨
+                case "Settings" -> item.setGraphic(createMenuIcon("\uD83D\uDD27")); // ðŸ”§
+                case "About" -> item.setGraphic(createMenuIcon("\u2139")); // â„¹
             }
         }
     }
@@ -851,9 +851,9 @@ public class MainController {
             String text = item.getText();
             if (text == null) continue;
             switch (text) {
-                case "User Profile" -> item.setGraphic(createMenuIcon("\uD83D\uDC64")); // 👤
-                case "Account Information" -> item.setGraphic(createMenuIcon("\uD83D\uDCCB")); // 📋
-                case "Logout" -> item.setGraphic(createMenuIcon("\uD83D\uDEAA")); // 🚪
+                case "User Profile" -> item.setGraphic(createMenuIcon("\uD83D\uDC64")); // ðŸ‘¤
+                case "Account Information" -> item.setGraphic(createMenuIcon("\uD83D\uDCCB")); // ðŸ“‹
+                case "Logout" -> item.setGraphic(createMenuIcon("\uD83D\uDEAA")); // ðŸšª
             }
         }
     }
@@ -878,7 +878,7 @@ public class MainController {
         settingsManager.set("auth.accountUsername", user.username());
         settingsManager.set("auth.accountEmail", user.email());
         settingsManager.set("auth.accountPassword", "");
-        settingsManager.set("profile.name", user.name().isBlank() ? "Cortex User" : user.name());
+        settingsManager.set("profile.name", user.name().isBlank() ? "Altarix User" : user.name());
         settingsManager.set("profile.email", user.email().isBlank() ? "user@example.com" : user.email());
         settingsManager.save();
     }
@@ -958,7 +958,7 @@ public class MainController {
     }
 
     private void openAuthDialog() {
-        Label titleLabel = new Label("Welcome to Cortex");
+        Label titleLabel = new Label("Welcome to Altarix");
         titleLabel.getStyleClass().add("logout-confirm-title");
 
         Label subtitleLabel = new Label("Log in to your account or create one to continue with your saved profile.");
@@ -1161,7 +1161,7 @@ public class MainController {
             openAuthDialog();
             return;
         }
-        String userName = settingsManager.getString("profile.name", "Cortex User");
+        String userName = settingsManager.getString("profile.name", "Altarix User");
         String userEmail = settingsManager.getString("profile.email", "user@example.com");
         String userPlan = settingsManager.getString("profile.plan", "Free");
 
@@ -1288,7 +1288,7 @@ public class MainController {
             openAuthDialog();
             return;
         }
-        String userName = settingsManager.getString("profile.name", "Cortex User");
+        String userName = settingsManager.getString("profile.name", "Altarix User");
         String userEmail = settingsManager.getString("profile.email", "user@example.com");
         String userPlan = settingsManager.getString("profile.plan", "Free");
 
@@ -1375,9 +1375,9 @@ public class MainController {
         }
         String message = cause.getMessage();
         if (message == null || message.isBlank()) {
-            return "Could not reach the Cortex account service at " + authApiClient.getApiBaseUrl() + ".";
+            return "Could not reach the Altarix account service at " + authApiClient.getApiBaseUrl() + ".";
         }
-        return "Could not reach the Cortex account service at " + authApiClient.getApiBaseUrl() + ": " + message;
+        return "Could not reach the Altarix account service at " + authApiClient.getApiBaseUrl() + ": " + message;
     }
 
     // ================= ABOUT DIALOG =================
@@ -1385,7 +1385,7 @@ public class MainController {
     private void openAbout() {
         VBox content = AboutSectionView.createAboutContent(null);
 
-        javafx.stage.Stage dialog = createStyledDialog("About Cortex", content, 360, 260, null);
+        javafx.stage.Stage dialog = createStyledDialog("About Altarix", content, 360, 260, null);
         showDialogWithBackdrop(dialog);
     }
 
@@ -1433,4 +1433,5 @@ public class MainController {
         activeThemeStylesheet = stylesheet;
     }
 }
+
 

@@ -1,287 +1,287 @@
 ## CSS Refactoring - Visual Overview & Navigation Guide
 
-### 📊 Architecture Diagram
+### ðŸ“Š Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     JavaFX Application (Cortex)                      │
-│                                                                       │
-│  ┌──────────────────────────────────────────────────────────────┐   │
-│  │                      Java Code (Unchanged)                    │   │
-│  │  ✓ MainLayout.java (uses stylesheets)                        │   │
-│  │  ✓ ChatView.java (uses CSS classes)                          │   │
-│  │  ✓ AppConfig.java (stylesheet paths)                         │   │
-│  └─────────────────────┬──────────────────────────────────────┘   │
-│                        │                                             │
-│                        ▼                                             │
-│  ┌──────────────────────────────────────────────────────────────┐   │
-│  │             Stylesheet Loading (StyleManager)               │   │
-│  │                                                              │   │
-│  │  1. Load Core Stylesheets (once)                           │   │
-│  │     └─ Reused by all themes                                │   │
-│  │                                                              │   │
-│  │  2. Load Theme Stylesheet (switchable)                     │   │
-│  │     └─ Purple, Green, or Light                             │   │
-│  └─────────────────────┬──────────────────────────────────────┘   │
-│                        │                                             │
-│        ┌───────────────┼───────────────┐                            │
-│        │               │               │                            │
-│        ▼               ▼               ▼                            │
-│  ┌──────────────┐ ┌──────────────┐ ┌─────────────────────┐          │
-│  │ Core Files   │ │Theme: Purple │ │ Theme: Green │      │          │
-│  │              │ │              │ │              │      │          │
-│  │ _base.css    │ │ _tokens.css  │ │ _tokens.css  │ ... │          │
-│  │ _layout.css  │ │ theme.css    │ │ theme.css    │      │          │
-│  │ _buttons.css │ │              │ │              │      │          │
-│  │ _inputs.css  │ │ (+ light)    │ │ (+ light)    │      │          │
-│  │ _bubbles.css │ │              │ │              │      │          │
-│  │_components.css│ └──────────────┘ └──────────────┘      │          │
-│  └──────────────┘                                          │          │
-│                                                             │          │
-│  ┌─────────────────────────────────────────────────────────┤          │
-│  │          All 3 themes + light mode overrides            │          │
-│  └─────────────────────────────────────────────────────────┘          │
-│                                                                       │
-│  ┌──────────────────────────────────────────────────────────────┐   │
-│  │                    Applied to UI Components                   │   │
-│  │                                                              │   │
-│  │  .sidebar, .chat-container, .button-accent, .input-area... │   │
-│  │  (All class names unchanged - 100% backward compatible)     │   │
-│  └──────────────────────────────────────────────────────────────┘   │
-│                                                                       │
-└─────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                     JavaFX Application (Altarix)                      â”‚
+â”‚                                                                       â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚                      Java Code (Unchanged)                    â”‚   â”‚
+â”‚  â”‚  âœ“ MainLayout.java (uses stylesheets)                        â”‚   â”‚
+â”‚  â”‚  âœ“ ChatView.java (uses CSS classes)                          â”‚   â”‚
+â”‚  â”‚  âœ“ AppConfig.java (stylesheet paths)                         â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                        â”‚                                             â”‚
+â”‚                        â–¼                                             â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚             Stylesheet Loading (StyleManager)               â”‚   â”‚
+â”‚  â”‚                                                              â”‚   â”‚
+â”‚  â”‚  1. Load Core Stylesheets (once)                           â”‚   â”‚
+â”‚  â”‚     â””â”€ Reused by all themes                                â”‚   â”‚
+â”‚  â”‚                                                              â”‚   â”‚
+â”‚  â”‚  2. Load Theme Stylesheet (switchable)                     â”‚   â”‚
+â”‚  â”‚     â””â”€ Purple, Green, or Light                             â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                        â”‚                                             â”‚
+â”‚        â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                            â”‚
+â”‚        â”‚               â”‚               â”‚                            â”‚
+â”‚        â–¼               â–¼               â–¼                            â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”          â”‚
+â”‚  â”‚ Core Files   â”‚ â”‚Theme: Purple â”‚ â”‚ Theme: Green â”‚      â”‚          â”‚
+â”‚  â”‚              â”‚ â”‚              â”‚ â”‚              â”‚      â”‚          â”‚
+â”‚  â”‚ _base.css    â”‚ â”‚ _tokens.css  â”‚ â”‚ _tokens.css  â”‚ ... â”‚          â”‚
+â”‚  â”‚ _layout.css  â”‚ â”‚ theme.css    â”‚ â”‚ theme.css    â”‚      â”‚          â”‚
+â”‚  â”‚ _buttons.css â”‚ â”‚              â”‚ â”‚              â”‚      â”‚          â”‚
+â”‚  â”‚ _inputs.css  â”‚ â”‚ (+ light)    â”‚ â”‚ (+ light)    â”‚      â”‚          â”‚
+â”‚  â”‚ _bubbles.css â”‚ â”‚              â”‚ â”‚              â”‚      â”‚          â”‚
+â”‚  â”‚_components.cssâ”‚ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜      â”‚          â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                                          â”‚          â”‚
+â”‚                                                             â”‚          â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤          â”‚
+â”‚  â”‚          All 3 themes + light mode overrides            â”‚          â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜          â”‚
+â”‚                                                                       â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”‚
+â”‚  â”‚                    Applied to UI Components                   â”‚   â”‚
+â”‚  â”‚                                                              â”‚   â”‚
+â”‚  â”‚  .sidebar, .chat-container, .button-accent, .input-area... â”‚   â”‚
+â”‚  â”‚  (All class names unchanged - 100% backward compatible)     â”‚   â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â”‚
+â”‚                                                                       â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
 
-### 📚 Documentation Navigation
+### ðŸ“š Documentation Navigation
 
 ```
 styles/
-│
-├── 📖 REFACTORING-COMPLETE.md ........................... START HERE
-│   └─ Complete overview of entire refactoring
-│   └─ Summary of goals achieved
-│   └─ Before/after comparison
-│   └─ File statistics
-│   └─ Next steps recommended
-│
-├── 📖 README-MODULAR-ARCHITECTURE.md ................... DEEP DIVE
-│   └─ Full architecture details
-│   └─ Each file explained (120+ line description)
-│   └─ Component mapping to styles
-│   └─ Benefits breakdown
-│   └─ Best practices applied
-│
-├── 📖 MODULAR-ARCHITECTURE-GUIDE.md .................... IMPLEMENTATION
-│   └─ Step-by-step Java integration
-│   └─ Before/after code examples
-│   └─ Core file descriptions
-│   └─ Theme file descriptions
-│   └─ Migration guide
-│
-├── 📖 QUICK-REFERENCE.md ............................... QUICK LOOKUP
-│   └─ File structure overview
-│   └─ Component mapping table
-│   └─ Java integration steps (copy-paste ready)
-│   └─ Adding new theme guide
-│   └─ Migration checklist
-│
-└── 📖 VISUALISATION-GUIDE.md ........................... THIS FILE
-    └─ Architecture diagram
-    └─ File structure visualization
-    └─ Document navigation
-    └─ FAQ answers
+â”‚
+â”œâ”€â”€ ðŸ“– REFACTORING-COMPLETE.md ........................... START HERE
+â”‚   â””â”€ Complete overview of entire refactoring
+â”‚   â””â”€ Summary of goals achieved
+â”‚   â””â”€ Before/after comparison
+â”‚   â””â”€ File statistics
+â”‚   â””â”€ Next steps recommended
+â”‚
+â”œâ”€â”€ ðŸ“– README-MODULAR-ARCHITECTURE.md ................... DEEP DIVE
+â”‚   â””â”€ Full architecture details
+â”‚   â””â”€ Each file explained (120+ line description)
+â”‚   â””â”€ Component mapping to styles
+â”‚   â””â”€ Benefits breakdown
+â”‚   â””â”€ Best practices applied
+â”‚
+â”œâ”€â”€ ðŸ“– MODULAR-ARCHITECTURE-GUIDE.md .................... IMPLEMENTATION
+â”‚   â””â”€ Step-by-step Java integration
+â”‚   â””â”€ Before/after code examples
+â”‚   â””â”€ Core file descriptions
+â”‚   â””â”€ Theme file descriptions
+â”‚   â””â”€ Migration guide
+â”‚
+â”œâ”€â”€ ðŸ“– QUICK-REFERENCE.md ............................... QUICK LOOKUP
+â”‚   â””â”€ File structure overview
+â”‚   â””â”€ Component mapping table
+â”‚   â””â”€ Java integration steps (copy-paste ready)
+â”‚   â””â”€ Adding new theme guide
+â”‚   â””â”€ Migration checklist
+â”‚
+â””â”€â”€ ðŸ“– VISUALISATION-GUIDE.md ........................... THIS FILE
+    â””â”€ Architecture diagram
+    â””â”€ File structure visualization
+    â””â”€ Document navigation
+    â””â”€ FAQ answers
 ```
 
 ---
 
-### 📁 File Structure Visualization
+### ðŸ“ File Structure Visualization
 
 ```
-BEFORE: Single File Architecture (❌ Monolithic)
+BEFORE: Single File Architecture (âŒ Monolithic)
 
     app.css (584 lines)
-    ├── Root styles (with colors)
-    ├── Sidebar styles (with colors)
-    ├── Button styles (with colors)
-    ├── Input styles (with colors)
-    ├── Message styles (with colors)
-    ├── Code styles (with colors)
-    ├── Component styles (with colors)
-    └── Light mode overrides (180+ lines)
+    â”œâ”€â”€ Root styles (with colors)
+    â”œâ”€â”€ Sidebar styles (with colors)
+    â”œâ”€â”€ Button styles (with colors)
+    â”œâ”€â”€ Input styles (with colors)
+    â”œâ”€â”€ Message styles (with colors)
+    â”œâ”€â”€ Code styles (with colors)
+    â”œâ”€â”€ Component styles (with colors)
+    â””â”€â”€ Light mode overrides (180+ lines)
 
-    ⚠️ Problems:
-       • Colors scattered throughout file
-       • 584 lines hard to navigate
-       • Difficult to add new theme
-       • Structure mixed with colors
+    âš ï¸ Problems:
+       â€¢ Colors scattered throughout file
+       â€¢ 584 lines hard to navigate
+       â€¢ Difficult to add new theme
+       â€¢ Structure mixed with colors
 
 
-AFTER: Modular Folder Architecture (✅ Organized)
+AFTER: Modular Folder Architecture (âœ… Organized)
 
     styles/
-    │
-    ├── core/ (Reusable by all 3 themes)
-    │   ├── _base.css ..................... 120 lines (Typography)
-    │   ├── _layout.css ................... 60 lines  (Containers)
-    │   ├── _buttons.css .................. 45 lines  (Buttons)
-    │   ├── _inputs.css ................... 80 lines  (Inputs)
-    │   ├── _bubbles.css .................. 40 lines  (Bubbles)
-    │   └── _components.css ............... 75 lines  (Components)
-    │                              TOTAL: 320 lines (structure only)
-    │
-    ├── themes/
-    │   ├── dark-purple/
-    │   │   ├── _tokens.css ............... 35 lines  (Colors)
-    │   │   └── theme.css ................. 520 lines (Theme + light)
-    │   │
-    │   ├── dark-green/
-    │   │   ├── _tokens.css ............... 35 lines  (Colors)
-    │   │   └── theme.css ................. 520 lines (Theme + light)
-    │   │
-    │   └── light/
-    │       ├── _tokens.css ............... 35 lines  (Colors)
-    │       └── theme.css ................. 420 lines (Light theme)
-    │                              TOTAL: 1,565 lines (colors + themes)
-    │
-    └── Documentation/ (4 comprehensive guides)
-        ├── REFACTORING-COMPLETE.md (Start here!)
-        ├── README-MODULAR-ARCHITECTURE.md
-        ├── MODULAR-ARCHITECTURE-GUIDE.md
-        ├── QUICK-REFERENCE.md
-        └── VISUALIZATION-GUIDE.md (This file)
+    â”‚
+    â”œâ”€â”€ core/ (Reusable by all 3 themes)
+    â”‚   â”œâ”€â”€ _base.css ..................... 120 lines (Typography)
+    â”‚   â”œâ”€â”€ _layout.css ................... 60 lines  (Containers)
+    â”‚   â”œâ”€â”€ _buttons.css .................. 45 lines  (Buttons)
+    â”‚   â”œâ”€â”€ _inputs.css ................... 80 lines  (Inputs)
+    â”‚   â”œâ”€â”€ _bubbles.css .................. 40 lines  (Bubbles)
+    â”‚   â””â”€â”€ _components.css ............... 75 lines  (Components)
+    â”‚                              TOTAL: 320 lines (structure only)
+    â”‚
+    â”œâ”€â”€ themes/
+    â”‚   â”œâ”€â”€ dark-purple/
+    â”‚   â”‚   â”œâ”€â”€ _tokens.css ............... 35 lines  (Colors)
+    â”‚   â”‚   â””â”€â”€ theme.css ................. 520 lines (Theme + light)
+    â”‚   â”‚
+    â”‚   â”œâ”€â”€ dark-green/
+    â”‚   â”‚   â”œâ”€â”€ _tokens.css ............... 35 lines  (Colors)
+    â”‚   â”‚   â””â”€â”€ theme.css ................. 520 lines (Theme + light)
+    â”‚   â”‚
+    â”‚   â””â”€â”€ light/
+    â”‚       â”œâ”€â”€ _tokens.css ............... 35 lines  (Colors)
+    â”‚       â””â”€â”€ theme.css ................. 420 lines (Light theme)
+    â”‚                              TOTAL: 1,565 lines (colors + themes)
+    â”‚
+    â””â”€â”€ Documentation/ (4 comprehensive guides)
+        â”œâ”€â”€ REFACTORING-COMPLETE.md (Start here!)
+        â”œâ”€â”€ README-MODULAR-ARCHITECTURE.md
+        â”œâ”€â”€ MODULAR-ARCHITECTURE-GUIDE.md
+        â”œâ”€â”€ QUICK-REFERENCE.md
+        â””â”€â”€ VISUALIZATION-GUIDE.md (This file)
 
-    ✅ Benefits:
-       • Core files reused by all themes (320 × 3 = 960 lines saved!)
-       • Colors isolated in _tokens.css
-       • Small, focused files (40-80 lines each)
-       • Easy to add new themes (create folder, copy template)
-       • Structure and colors completely separated
+    âœ… Benefits:
+       â€¢ Core files reused by all themes (320 Ã— 3 = 960 lines saved!)
+       â€¢ Colors isolated in _tokens.css
+       â€¢ Small, focused files (40-80 lines each)
+       â€¢ Easy to add new themes (create folder, copy template)
+       â€¢ Structure and colors completely separated
 ```
 
 ---
 
-### 🎨 Color Token Flow Diagram
+### ðŸŽ¨ Color Token Flow Diagram
 
 ```
 Theme Selection
-    │
-    ├─ Dark Purple
-    │  ├─ /themes/dark-purple/_tokens.css
-    │  │  ├─ -fx-accent-primary: #6d28d9
-    │  │  ├─ -fx-text-primary: #e2e8f0
-    │  │  ├─ -fx-bg-sidebar: linear-gradient(...)
-    │  │  └─ ... 20+ more colors
-    │  │
-    │  └─ /themes/dark-purple/theme.css
-    │     ├─ .root { background: gradient with primary }
-    │     ├─ .button { background: gradient with primary }
-    │     ├─ .input { border: secondary color }
-    │     └─ ... all components styled
-    │
-    ├─ Dark Green
-    │  ├─ /themes/dark-green/_tokens.css
-    │  │  ├─ -fx-accent-primary: #059669
-    │  │  ├─ -fx-text-primary: #e2f8f0
-    │  │  ├─ -fx-bg-sidebar: linear-gradient(...)
-    │  │  └─ ... 20+ more colors (green-based)
-    │  │
-    │  └─ /themes/dark-green/theme.css
-    │     ├─ .root { background: gradient with green }
-    │     ├─ .button { background: gradient with green }
-    │     ├─ .input { border: green secondary color }
-    │     └─ ... all components styled
-    │
-    └─ Light
-       ├─ /themes/light/_tokens.css
-       │  ├─ -fx-accent-primary: #6366f1 (indigo)
-       │  ├─ -fx-text-primary: #1e293b (dark)
-       │  ├─ -fx-bg-root: light gradient
-       │  └─ ... 20+ more light colors
-       │
-       └─ /themes/light/theme.css
-          ├─ .root { background: light gradient }
-          ├─ .button { background: light indigo }
-          ├─ .input { background: light gray }
-          └─ ... all components light-styled
+    â”‚
+    â”œâ”€ Dark Purple
+    â”‚  â”œâ”€ /themes/dark-purple/_tokens.css
+    â”‚  â”‚  â”œâ”€ -fx-accent-primary: #6d28d9
+    â”‚  â”‚  â”œâ”€ -fx-text-primary: #e2e8f0
+    â”‚  â”‚  â”œâ”€ -fx-bg-sidebar: linear-gradient(...)
+    â”‚  â”‚  â””â”€ ... 20+ more colors
+    â”‚  â”‚
+    â”‚  â””â”€ /themes/dark-purple/theme.css
+    â”‚     â”œâ”€ .root { background: gradient with primary }
+    â”‚     â”œâ”€ .button { background: gradient with primary }
+    â”‚     â”œâ”€ .input { border: secondary color }
+    â”‚     â””â”€ ... all components styled
+    â”‚
+    â”œâ”€ Dark Green
+    â”‚  â”œâ”€ /themes/dark-green/_tokens.css
+    â”‚  â”‚  â”œâ”€ -fx-accent-primary: #059669
+    â”‚  â”‚  â”œâ”€ -fx-text-primary: #e2f8f0
+    â”‚  â”‚  â”œâ”€ -fx-bg-sidebar: linear-gradient(...)
+    â”‚  â”‚  â””â”€ ... 20+ more colors (green-based)
+    â”‚  â”‚
+    â”‚  â””â”€ /themes/dark-green/theme.css
+    â”‚     â”œâ”€ .root { background: gradient with green }
+    â”‚     â”œâ”€ .button { background: gradient with green }
+    â”‚     â”œâ”€ .input { border: green secondary color }
+    â”‚     â””â”€ ... all components styled
+    â”‚
+    â””â”€ Light
+       â”œâ”€ /themes/light/_tokens.css
+       â”‚  â”œâ”€ -fx-accent-primary: #6366f1 (indigo)
+       â”‚  â”œâ”€ -fx-text-primary: #1e293b (dark)
+       â”‚  â”œâ”€ -fx-bg-root: light gradient
+       â”‚  â””â”€ ... 20+ more light colors
+       â”‚
+       â””â”€ /themes/light/theme.css
+          â”œâ”€ .root { background: light gradient }
+          â”œâ”€ .button { background: light indigo }
+          â”œâ”€ .input { background: light gray }
+          â””â”€ ... all components light-styled
 ```
 
 ---
 
-### 🔄 Theme Switching Process
+### ðŸ”„ Theme Switching Process
 
 ```
 User Selects Theme
-    │
-    ▼
+    â”‚
+    â–¼
 ChatView.getThemeMenu().setOnAction()
-    │
-    ▼
+    â”‚
+    â–¼
 MainLayout.switchTheme(themePath, lightMode)
-    │
-    ├─ StyleManager.applyTheme(scene, themePath)
-    │  │
-    │  ├─ Remove old theme stylesheet
-    │  │  └─ scene.getStylesheets().removeIf(url.contains("/themes/"))
-    │  │
-    │  └─ Add new theme stylesheet
-    │     └─ scene.getStylesheets().add(themePath)
-    │
-    └─ Toggle light mode class
-       ├─ if (lightMode)
-       │  └─ root.getStyleClass().add("light-mode")
-       │
-       └─ else
-          └─ root.getStyleClass().remove("light-mode")
+    â”‚
+    â”œâ”€ StyleManager.applyTheme(scene, themePath)
+    â”‚  â”‚
+    â”‚  â”œâ”€ Remove old theme stylesheet
+    â”‚  â”‚  â””â”€ scene.getStylesheets().removeIf(url.contains("/themes/"))
+    â”‚  â”‚
+    â”‚  â””â”€ Add new theme stylesheet
+    â”‚     â””â”€ scene.getStylesheets().add(themePath)
+    â”‚
+    â””â”€ Toggle light mode class
+       â”œâ”€ if (lightMode)
+       â”‚  â””â”€ root.getStyleClass().add("light-mode")
+       â”‚
+       â””â”€ else
+          â””â”€ root.getStyleClass().remove("light-mode")
 
-    ▼
+    â–¼
 JavaFX reapplies all stylesheets to UI components
-    │
-    ├─ Core styles (structure)
-    ├─ Theme styles (colors)
-    └─ Light mode overrides (if enabled)
+    â”‚
+    â”œâ”€ Core styles (structure)
+    â”œâ”€ Theme styles (colors)
+    â””â”€ Light mode overrides (if enabled)
 
-    ▼
+    â–¼
 All UI updated instantly with new theme
 ```
 
 ---
 
-### 📋 Core vs Theme Responsibility Matrix
+### ðŸ“‹ Core vs Theme Responsibility Matrix
 
 ```
                           Core Files    Theme Files
-─────────────────────────────────────────────────────
-Font family               ✅ Define      ❌ Don't touch
-Typography               ✅ Sizes        ❌ Inherit
-Border radius            ✅ Define       ❌ Inherit
-Padding/margin           ✅ Define       ❌ Inherit
-Element sizing           ✅ Define       ❌ Inherit
-─────────────────────────────────────────────────────
-Background colors        ❌ Don't define ✅ Apply color
-Text colors              ❌ Don't define ✅ Apply color
-Gradients                ❌ Don't define ✅ Define completely
-Shadows/effects          ❌ Don't define ✅ Apply effect
-Border colors            ❌ Don't define ✅ Apply color
-─────────────────────────────────────────────────────
-Hover states             ⚠️ Structure   ✅ Color change
-Pressed states           ⚠️ Structure   ✅ Effect change
-Focus states             ⚠️ Structure   ✅ Color change
-─────────────────────────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+Font family               âœ… Define      âŒ Don't touch
+Typography               âœ… Sizes        âŒ Inherit
+Border radius            âœ… Define       âŒ Inherit
+Padding/margin           âœ… Define       âŒ Inherit
+Element sizing           âœ… Define       âŒ Inherit
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+Background colors        âŒ Don't define âœ… Apply color
+Text colors              âŒ Don't define âœ… Apply color
+Gradients                âŒ Don't define âœ… Define completely
+Shadows/effects          âŒ Don't define âœ… Apply effect
+Border colors            âŒ Don't define âœ… Apply color
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+Hover states             âš ï¸ Structure   âœ… Color change
+Pressed states           âš ï¸ Structure   âœ… Effect change
+Focus states             âš ï¸ Structure   âœ… Color change
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 Legend:
-✅ = Responsibility of this file
-❌ = Not this file's concern
-⚠️  = Both contribute (core handles padding, theme handles color)
+âœ… = Responsibility of this file
+âŒ = Not this file's concern
+âš ï¸  = Both contribute (core handles padding, theme handles color)
 ```
 
 ---
 
-### ❓ Frequently Asked Questions
+### â“ Frequently Asked Questions
 
 #### Q1: Do I need to change Java code?
-**A:** No! All CSS class names are unchanged. Java code references `.button-accent`, `.input-area`, etc. — these still work identically.
+**A:** No! All CSS class names are unchanged. Java code references `.button-accent`, `.input-area`, etc. â€” these still work identically.
 
 #### Q2: How do I switch themes?
 **A:** Use `StyleManager.applyTheme(scene, "/styles/themes/dark-green/theme.css")`. Core files stay loaded, only theme changes.
@@ -299,60 +299,60 @@ Legend:
 **A:** Avoid repeating 320 lines of structure 3 times. Core loads once, multiple themes switch instantly.
 
 #### Q7: How much does this save?
-**A:** ~960 lines of duplication removed (320 core × 3 themes). Better organization of remaining 1,885 lines.
+**A:** ~960 lines of duplication removed (320 core Ã— 3 themes). Better organization of remaining 1,885 lines.
 
 ---
 
-### 📊 Refactoring Impact Summary
+### ðŸ“Š Refactoring Impact Summary
 
 ```
 Metric                  Before      After       Improvement
-─────────────────────────────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Single CSS files        2           12          +500% granularity
-Lines per file          292-584     35-555      ✓ Focused
-Code reuse              0%          70%         ✓ Efficient
-Time to add theme       1 hour      5 minutes   ✓ 12× faster
-File complexity         High        Low         ✓ Maintainable
-Color management        Scattered   Centralized ✓ Organized
-Structure/color mix     Yes (bad)   No (good)   ✓ Separated
-Documentation           Minimal     Extensive   ✓ Complete
+Lines per file          292-584     35-555      âœ“ Focused
+Code reuse              0%          70%         âœ“ Efficient
+Time to add theme       1 hour      5 minutes   âœ“ 12Ã— faster
+File complexity         High        Low         âœ“ Maintainable
+Color management        Scattered   Centralized âœ“ Organized
+Structure/color mix     Yes (bad)   No (good)   âœ“ Separated
+Documentation           Minimal     Extensive   âœ“ Complete
 ```
 
 ---
 
-### 🚀 Implementation Roadmap
+### ðŸš€ Implementation Roadmap
 
 ```
-Phase 1: Folder Structure (✅ COMPLETE)
-├─ Created core/ folder with 6 files
-├─ Created themes/ folder with 3 subfolders
-└─ Copied all CSS content appropriately
+Phase 1: Folder Structure (âœ… COMPLETE)
+â”œâ”€ Created core/ folder with 6 files
+â”œâ”€ Created themes/ folder with 3 subfolders
+â””â”€ Copied all CSS content appropriately
 
-Phase 2: Documentation (✅ COMPLETE)
-├─ Detailed architecture guide
-├─ Implementation guide with Java code
-├─ Quick reference for lookup
-└─ This visualization guide
+Phase 2: Documentation (âœ… COMPLETE)
+â”œâ”€ Detailed architecture guide
+â”œâ”€ Implementation guide with Java code
+â”œâ”€ Quick reference for lookup
+â””â”€ This visualization guide
 
 Phase 3: Java Integration (IN YOUR HANDS)
-├─ Create StyleManager utility
-├─ Update AppConfig with new paths
-├─ Update MainLayout.setupStage()
-├─ Test purple theme (should be identical)
-├─ Test green theme (already integrated)
-└─ Remove deprecated files
+â”œâ”€ Create StyleManager utility
+â”œâ”€ Update AppConfig with new paths
+â”œâ”€ Update MainLayout.setupStage()
+â”œâ”€ Test purple theme (should be identical)
+â”œâ”€ Test green theme (already integrated)
+â””â”€ Remove deprecated files
 
 Phase 4: Verification (RECOMMENDED)
-├─ Visual inspection (compare original vs refactored)
-├─ Functional testing (all features work)
-├─ Performance testing (no slowdown expected)
-├─ Light mode toggle verification
-└─ Theme switching verification
+â”œâ”€ Visual inspection (compare original vs refactored)
+â”œâ”€ Functional testing (all features work)
+â”œâ”€ Performance testing (no slowdown expected)
+â”œâ”€ Light mode toggle verification
+â””â”€ Theme switching verification
 ```
 
 ---
 
-### 📖 How to Use This Documentation
+### ðŸ“– How to Use This Documentation
 
 1. **Start with REFACTORING-COMPLETE.md**
    - 5-minute overview
@@ -381,8 +381,9 @@ Phase 4: Verification (RECOMMENDED)
 
 ---
 
-## ✅ Conclusion
+## âœ… Conclusion
 
 The JavaFX stylesheet refactoring is **complete and ready for integration**. All 12 files created, documented, and organized for maximum maintainability and scalability.
 
 **Next Step:** Follow the Java integration guide in MODULAR-ARCHITECTURE-GUIDE.md to start using the modular stylesheets!
+

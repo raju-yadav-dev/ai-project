@@ -1,7 +1,7 @@
 package com.aicodehelper.ui;
 
 import com.aicodehelper.util.AppConfig;
-import com.cortex.util.IconResources;
+import com.altarix.util.IconResources;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;

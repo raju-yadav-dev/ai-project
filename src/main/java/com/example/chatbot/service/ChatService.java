@@ -980,7 +980,7 @@ public class ChatService {
     private LoadedProperties loadAppProperties() {
         Properties properties = new Properties();
         // Preferred order:
-        // 1) Cortex folder (outside ai-project),
+        // 1) Altarix folder (outside ai-project),
         // 2) ai-project/src/main/resources/app.properties,
         // 3) classpath fallback (/app.properties).
 
@@ -989,7 +989,7 @@ public class ChatService {
                 ? projectDir.getParent().resolve(APP_PROPERTIES_FILE).toAbsolutePath().normalize()
                 : null;
         if (loadPropertiesFromFile(properties, externalPath)) {
-            return new LoadedProperties(properties, AppPropertiesSource.CORTEX_ROOT);
+            return new LoadedProperties(properties, AppPropertiesSource.Altarix_ROOT);
         }
 
         Path resourcePath = resolveResourcePropertiesPath(projectDir);
@@ -1611,9 +1611,9 @@ public class ChatService {
             return ("""
                     API keys are missing for: %s.
 
-                    `Cortex/app.properties` was not found, so the app used bundled fallback properties.
+                    `Altarix/app.properties` was not found, so the app used bundled fallback properties.
 
-                    Add provider keys in `Cortex/app.properties`, for example:
+                    Add provider keys in `Altarix/app.properties`, for example:
 
                     ```properties
                     past_api_1=YOUR_GROQ_KEY_1
@@ -1628,7 +1628,7 @@ public class ChatService {
         return ("""
                 API keys are missing for: %s.
 
-                Configure your provider keys in `Cortex/app.properties`:
+                Configure your provider keys in `Altarix/app.properties`:
 
                 ```properties
                 past_api_1=YOUR_GROQ_KEY_1
@@ -1642,7 +1642,7 @@ public class ChatService {
 
     private String buildMissingVideoProviderMessage(AppPropertiesSource source, List<String> missingProviders) {
         return """
-                Video generation in Cortex currently uses the Freepik integration.
+                Video generation in Altarix currently uses the Freepik integration.
 
                 %s
                 """.formatted(buildMissingApiKeyMessage(source, missingProviders));
@@ -1652,7 +1652,7 @@ public class ChatService {
     }
 
     private enum AppPropertiesSource {
-        CORTEX_ROOT,
+        Altarix_ROOT,
         RESOURCE_FALLBACK,
         NOT_FOUND
     }
@@ -1923,3 +1923,4 @@ public class ChatService {
         }
     }
 }
+

@@ -1,5 +1,5 @@
 /* ============================================================================ */
-/* CORTEX - LIGHT ROSE THEME */
+/* Altarix - LIGHT ROSE THEME */
 /* ============================================================================ */
 
 .window-root.theme-light {
@@ -155,5 +155,6 @@
 .context-menu .separator .line {
     -fx-border-color: rgba(195, 138, 164, 0.24);
 }
+
 
 

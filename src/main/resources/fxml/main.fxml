@@ -15,7 +15,7 @@
                 </padding>
 
                 <ImageView fx:id="appIconView" fitWidth="18" fitHeight="18" preserveRatio="true" smooth="true" />
-                <Label text="Cortex" styleClass="titlebar-label" />
+                <Label text="Altarix" styleClass="titlebar-label" />
 
                 <Region HBox.hgrow="ALWAYS" />
 
@@ -81,3 +81,4 @@
         </center>
     </BorderPane>
 </StackPane>
+

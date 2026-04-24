@@ -1,4 +1,4 @@
-name: Build Cortex Installers
+name: Build Altarix Installers
 
 on:
   workflow_dispatch:
@@ -16,13 +16,13 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact_name: cortex-windows
+            artifact_name: Altarix-windows
             javafx_platform: win
           - os: ubuntu-latest
-            artifact_name: cortex-linux
+            artifact_name: Altarix-linux
             javafx_platform: linux
           - os: macos-latest
-            artifact_name: cortex-macos
+            artifact_name: Altarix-macos
             javafx_platform: mac
 
     steps:
@@ -72,12 +72,12 @@ jobs:
           New-Item -ItemType Directory -Force -Path dist | Out-Null
 
           $commonArgs = @(
-            '--name', 'Cortex',
+            '--name', 'Altarix',
             '--input', 'build/libs',
             '--main-jar', '${{ steps.jar.outputs.jar_name }}',
-            '--main-class', 'com.example.chatbot.CortexLauncher',
+            '--main-class', 'com.example.chatbot.AltarixLauncher',
             '--app-version', '1.2.1',
-            '--vendor', 'Cortex AI',
+            '--vendor', 'Altarix AI',
             '--dest', 'dist'
           )
 
@@ -93,10 +93,10 @@ jobs:
               foreach ($type in @('exe', 'msi')) {
                 $args = $commonArgs + @(
                   '--type', $type,
-                  '--icon', 'src/main/resources/icon/Cortex.ico',
+                  '--icon', 'src/main/resources/icon/Altarix-256.png',
                   '--win-shortcut',
                   '--win-menu',
-                  '--win-menu-group', 'Cortex'
+                  '--win-menu-group', 'Altarix'
                 )
                 Invoke-JPackage $args
               }
@@ -105,7 +105,7 @@ jobs:
               foreach ($type in @('deb', 'rpm')) {
                 $args = $commonArgs + @(
                   '--type', $type,
-                  '--icon', 'src/main/resources/icon/Cortex.png',
+                  '--icon', 'src/main/resources/icon/Altarix-256.png',
                   '--linux-shortcut'
                 )
                 Invoke-JPackage $args
@@ -130,3 +130,4 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: dist/*
           if-no-files-found: error
+

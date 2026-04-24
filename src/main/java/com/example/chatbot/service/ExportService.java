@@ -35,7 +35,7 @@ public class ExportService {
         
         // Messages
         for (Message msg : conversation.getMessages()) {
-            String sender = msg.getSender() == Message.Sender.USER ? "USER" : "CORTEX";
+            String sender = msg.getSender() == Message.Sender.USER ? "USER" : "Altarix";
             String timestamp = msg.getTimestamp().format(DATE_FORMATTER);
             
             content.append("[").append(timestamp).append("] ").append(sender).append(":\n");
@@ -57,7 +57,7 @@ public class ExportService {
         
         // Messages
         for (Message msg : conversation.getMessages()) {
-            String sender = msg.getSender() == Message.Sender.USER ? "👤 User" : "🤖 Cortex";
+            String sender = msg.getSender() == Message.Sender.USER ? "ðŸ‘¤ User" : "ðŸ¤– Altarix";
             String timestamp = msg.getTimestamp().format(DATE_FORMATTER);
             
             content.append("## ").append(sender).append(" (").append(timestamp).append(")\n\n");
@@ -92,7 +92,7 @@ public class ExportService {
             float yPosition = 700;
             
             for (Message msg : conversation.getMessages()) {
-                String sender = msg.getSender() == Message.Sender.USER ? "USER" : "CORTEX";
+                String sender = msg.getSender() == Message.Sender.USER ? "USER" : "Altarix";
                 String timestamp = msg.getTimestamp().format(DATE_FORMATTER);
                 String content = msg.getContent();
                 
@@ -155,7 +155,7 @@ public class ExportService {
             
             // Messages
             for (Message msg : conversation.getMessages()) {
-                String sender = msg.getSender() == Message.Sender.USER ? "User" : "Cortex";
+                String sender = msg.getSender() == Message.Sender.USER ? "User" : "Altarix";
                 String timestamp = msg.getTimestamp().format(DATE_FORMATTER);
                 
                 // Sender + timestamp
@@ -214,3 +214,4 @@ public class ExportService {
         return lines.isEmpty() ? new String[]{ text } : lines.toArray(new String[0]);
     }
 }
+

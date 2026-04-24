@@ -1,6 +1,6 @@
 package com.example.chatbot.visualizer;
 
-import com.cortex.util.IconResources;
+import com.altarix.util.IconResources;
 import com.example.chatbot.service.SettingsManager;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;

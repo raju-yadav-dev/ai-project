@@ -13,7 +13,7 @@ package com.aicodehelper.util;
 public final class AppConfig {
 
     // ========== APPLICATION METADATA ==========
-    public static final String APP_NAME = "Cortex";
+    public static final String APP_NAME = "Altarix";
     public static final String APP_VERSION = "1.0.0";
     public static final String APP_DESCRIPTION = "AI-powered coding assistant for beginners";
 
@@ -98,7 +98,7 @@ public final class AppConfig {
 
     // ========== BUTTON LABELS ==========
     public static final String NEW_CHAT_BUTTON_TEXT = "Start New Chat";
-    public static final String SEND_BUTTON_ICON = "↑";
+    public static final String SEND_BUTTON_ICON = "â†‘";
     public static final String COPY_BUTTON_TEXT = "Copy";
     public static final String THEME_BUTTON_TEXT = "Theme";
     public static final String THEME_BUTTON_LIGHT_TEXT = "Light";
@@ -134,3 +134,4 @@ public final class AppConfig {
         return Math.min(DEFAULT_WINDOW_HEIGHT, Math.max(MIN_WINDOW_HEIGHT, screenHeight * WINDOW_HEIGHT_RATIO));
     }
 }
+

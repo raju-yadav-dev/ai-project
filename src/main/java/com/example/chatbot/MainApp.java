@@ -1,6 +1,6 @@
 package com.example.chatbot;
 
-import com.cortex.util.IconResources;
+import com.altarix.util.IconResources;
 import com.example.chatbot.controller.MainController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -36,7 +36,7 @@ public class MainApp extends Application {
 
         // ---- Configure Stage ----
         primaryStage.initStyle(StageStyle.TRANSPARENT);
-        primaryStage.setTitle("Cortex");
+        primaryStage.setTitle("Altarix");
         primaryStage.setScene(scene);
         IconResources.addStageIcons(primaryStage, getClass());
         primaryStage.setResizable(true);
@@ -259,3 +259,4 @@ public class MainApp extends Application {
         launch(args);
     }
 }
+

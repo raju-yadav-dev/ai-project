@@ -1,5 +1,5 @@
 /* ============================================================================ */
-/* CORTEX - CORE LAYOUT STYLES (Theme-Independent) */
+/* Altarix - CORE LAYOUT STYLES (Theme-Independent) */
 /* ============================================================================ */
 
 /* Root Container */
@@ -77,3 +77,4 @@
 .message-row {
     -fx-padding: 2 0;
 }
+

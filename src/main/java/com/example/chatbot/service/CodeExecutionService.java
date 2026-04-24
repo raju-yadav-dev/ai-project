@@ -26,7 +26,7 @@ import java.util.stream.Stream;
  */
 public class CodeExecutionService {
 
-    private static final String SEPARATOR = "━━━━━━━━";
+    private static final String SEPARATOR = "â”â”â”â”â”â”â”â”";
     private static final Pattern PUBLIC_CLASS_PATTERN = Pattern.compile("\\bpublic\\s+class\\s+([A-Za-z_$][\\w$]*)\\b");
     private static final Pattern CLASS_PATTERN = Pattern.compile("\\bclass\\s+([A-Za-z_$][\\w$]*)\\b");
 
@@ -84,7 +84,7 @@ public class CodeExecutionService {
             return exitResult(-1, lang.getDisplayName(), 0);
         }
 
-        Path tempDir = Files.createTempDirectory("cortex-run-");
+        Path tempDir = Files.createTempDirectory("Altarix-run-");
         try {
             String ext = (lang.extensions != null && !lang.extensions.isEmpty())
                     ? lang.extensions.get(0) : ".tmp";
@@ -134,7 +134,7 @@ public class CodeExecutionService {
             return exitResult(-1, "Java", 0);
         }
 
-        Path tempDir = Files.createTempDirectory("cortex-java-run-");
+        Path tempDir = Files.createTempDirectory("Altarix-java-run-");
         try {
             String source = code;
             String className = extractJavaClassName(code);
@@ -185,7 +185,7 @@ public class CodeExecutionService {
             return exitResult(-1, langLabel, 0);
         }
 
-        Path tempDir = Files.createTempDirectory("cortex-" + (isCpp ? "cpp" : "c") + "-run-");
+        Path tempDir = Files.createTempDirectory("Altarix-" + (isCpp ? "cpp" : "c") + "-run-");
         try {
             String sourceExt = isCpp ? ".cpp" : ".c";
             boolean isWindows = isWindows();
@@ -359,3 +359,4 @@ public class CodeExecutionService {
     private record RunProcessResult(int exitCode) {
     }
 }
+

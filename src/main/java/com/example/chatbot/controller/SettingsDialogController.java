@@ -303,8 +303,8 @@ public class SettingsDialogController {
     private VBox buildTerminalPage() {
         VBox page = createPage("Terminal");
         page.getChildren().add(createComboRow("Default shell", "terminal.defaultShell",
-            new String[]{"Cortex", "cmd", "powershell", "bash"},
-            settings.getString("terminal.defaultShell", "Cortex")));
+            new String[]{"altarix", "cmd", "powershell", "bash"},
+            settings.getString("terminal.defaultShell", "altarix")));
         page.getChildren().add(createToggleRow("Clear terminal before running code", "terminal.clearBeforeRun", settings.getBoolean("terminal.clearBeforeRun", false)));
         page.getChildren().add(createSpinnerRow("Scrollback buffer size", "terminal.scrollbackSize", 1000, 100000, settings.getInt("terminal.scrollbackSize", 10000)));
         page.getChildren().add(createToggleRow("Show execution time", "terminal.showExecutionTime", settings.getBoolean("terminal.showExecutionTime", true)));
@@ -342,7 +342,7 @@ public class SettingsDialogController {
 
         Label setupsHint = new Label(
                 "Add one or more provider setups. Each setup can have its own API keys, base URL, and model name. " +
-                "When Input mode default is Best, Cortex automatically uses the most suitable configured provider."
+                "When Input mode default is Best, Altarix automatically uses the most suitable configured provider."
         );
         setupsHint.setWrapText(true);
         setupsHint.getStyleClass().add("settings-hint");
@@ -355,7 +355,7 @@ public class SettingsDialogController {
                 settings.getString("chat.inputModeDefault", "Best")
         ));
 
-        // Temperature slider 0.0 – 2.0
+        // Temperature slider 0.0 â€“ 2.0
         HBox tempRow = new HBox(12);
         tempRow.setAlignment(Pos.CENTER_LEFT);
         Label tempLabel = new Label("Temperature");
@@ -385,7 +385,7 @@ public class SettingsDialogController {
         promptArea.setWrapText(true);
         promptArea.setPrefRowCount(4);
         promptArea.getStyleClass().add("settings-textarea");
-        promptArea.setPromptText("Leave empty to use default Cortex system prompt");
+        promptArea.setPromptText("Leave empty to use default Altarix system prompt");
         promptBox.getChildren().addAll(promptLabel, promptArea);
         promptBox.setUserData(new SettingBinding("ai.systemPrompt", promptArea::getText));
         page.getChildren().add(promptBox);
@@ -1112,3 +1112,4 @@ public class SettingsDialogController {
         SETTINGS
     }
 }
+

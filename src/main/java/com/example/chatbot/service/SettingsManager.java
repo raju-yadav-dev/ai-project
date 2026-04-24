@@ -18,7 +18,7 @@ import java.util.function.Consumer;
  * Settings are organized by dot-separated keys (e.g. "appearance.uiFontSize").
  */
 public final class SettingsManager {
-    private static final String CONFIG_FILE_NAME = "cortex-settings.json";
+    private static final String CONFIG_FILE_NAME = "Altarix-settings.json";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Type MAP_TYPE = new TypeToken<LinkedHashMap<String, Object>>() {}.getType();
     private static final SettingsManager INSTANCE = new SettingsManager();
@@ -77,7 +77,7 @@ public final class SettingsManager {
         putDefault("codeVisualizer.linkedListLegendEnabled", true);
 
         // Terminal
-        putDefault("terminal.defaultShell", "Cortex");
+        putDefault("terminal.defaultShell", "altarix");
         putDefault("terminal.clearBeforeRun", false);
         putDefault("terminal.scrollbackSize", 10000);
         putDefault("terminal.showExecutionTime", true);
@@ -112,7 +112,7 @@ public final class SettingsManager {
         putDefault("privacy.saveChatHistory", true);
 
         // Profile
-        putDefault("profile.name", "Cortex User");
+        putDefault("profile.name", "Altarix User");
         putDefault("profile.email", "user@example.com");
         putDefault("profile.plan", "Free");
         putDefault("auth.loggedIn", false);
@@ -227,12 +227,12 @@ public final class SettingsManager {
 
     // ================= CONFIG PATH =================
     private Path resolveConfigPath() {
-        // Store in user home under .cortex
+        // Store in user home under .Altarix
         String home = System.getProperty("user.home");
         if (home == null || home.isBlank()) {
             return Path.of(CONFIG_FILE_NAME);
         }
-        return Path.of(home, ".cortex", CONFIG_FILE_NAME);
+        return Path.of(home, ".Altarix", CONFIG_FILE_NAME);
     }
 
     // ================= BULK ACCESS (for dialog) =================
@@ -249,3 +249,4 @@ public final class SettingsManager {
         System.out.println("[SettingsManager] Clear cache requested.");
     }
 }
+

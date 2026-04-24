@@ -3,7 +3,7 @@ package com.aicodehelper.ui;
 import com.aicodehelper.controller.ChatController;
 import com.aicodehelper.model.Message;
 import com.aicodehelper.util.AppConfig;
-import com.cortex.util.IconResources;
+import com.altarix.util.IconResources;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.ParallelTransition;

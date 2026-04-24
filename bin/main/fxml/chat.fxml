@@ -15,7 +15,7 @@
                                 <Insets top="8" right="12" bottom="8" left="12" />
                             </padding>
                             <Label fx:id="exportToastLabel" styleClass="export-toast-label" text="" HBox.hgrow="ALWAYS" />
-                            <Button fx:id="exportToastCloseButton" text="✕" styleClass="export-toast-close" focusTraversable="false" />
+                            <Button fx:id="exportToastCloseButton" text="âœ•" styleClass="export-toast-close" focusTraversable="false" />
                         </HBox>
                     </top>
                     <!-- ================= MESSAGE VIEWPORT ================= -->
@@ -54,10 +54,10 @@
                                 <!-- Subsection: Input + Send Action -->
                                 <HBox fx:id="inputShell" styleClass="input-shell" alignment="CENTER_LEFT" spacing="10">
                                     <ComboBox fx:id="modelModeSelector" focusTraversable="false" styleClass="composer-mode-combo" />
-                                    <Button fx:id="attachImageButton" text="📎" focusTraversable="false" styleClass="terminal-toggle-button attach-image-button" />
-                                    <TextArea fx:id="inputArea" styleClass="input-area" prefRowCount="1" wrapText="true" promptText="Message Cortex..." HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="attachImageButton" text="ðŸ“Ž" focusTraversable="false" styleClass="terminal-toggle-button attach-image-button" />
+                                    <TextArea fx:id="inputArea" styleClass="input-area" prefRowCount="1" wrapText="true" promptText="Message Altarix..." HBox.hgrow="ALWAYS" />
                                     <Button fx:id="terminalToggleButton" text=">_" focusTraversable="false" styleClass="terminal-toggle-button" />
-                                    <MenuButton fx:id="exportButton" text="⋯" styleClass="overflow-menu-button" focusTraversable="false">
+                                    <MenuButton fx:id="exportButton" text="â‹¯" styleClass="overflow-menu-button" focusTraversable="false">
                                         <items>
                                             <MenuItem text="Copy chat as Markdown" onAction="#copyAsMarkdown" />
                                             <MenuItem text="Copy chat as Text" onAction="#copyAsText" />
@@ -105,3 +105,4 @@
         </SplitPane>
     </center>
 </BorderPane>
+

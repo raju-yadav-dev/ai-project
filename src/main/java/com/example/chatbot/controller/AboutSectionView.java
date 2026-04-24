@@ -23,7 +23,7 @@ public final class AboutSectionView {
     }
 
     public static VBox createAboutContent(Runnable onCheckForUpdates) {
-        Label appName = new Label("Cortex");
+        Label appName = new Label("Altarix");
         appName.getStyleClass().add("about-app-name");
 
         String version = loadVersion();
@@ -70,3 +70,4 @@ public final class AboutSectionView {
         return AboutSectionView.class.getResourceAsStream("/version.properties");
     }
 }
+

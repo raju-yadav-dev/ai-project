@@ -172,7 +172,7 @@ public class ChatController {
     private static final double TERMINAL_MAX_HEIGHT = 420;
     private static final String TERMINAL_PROMPT_SUFFIX = "> ";
     private static final String MODEL_MODE_ICON = "\u26A1";
-    private static final String DEFAULT_GENERATING_LABEL = "Cortex is generating";
+    private static final String DEFAULT_GENERATING_LABEL = "Altarix is generating";
     private static final String IMAGE_GENERATING_LABEL = "Generating image";
     private static final String DEFAULT_DOWNLOADED_IMAGE_NAME = "generated-image.png";
     private final BooleanProperty waitingForResponse = new SimpleBooleanProperty(false);
@@ -305,7 +305,7 @@ public class ChatController {
             }
         });
 
-        // ---- Auto-resize input height (1–4 lines) ----
+        // ---- Auto-resize input height (1â€“4 lines) ----
         inputArea.textProperty().addListener((obs, oldText, newText) -> adjustInputHeight(newText));
         adjustInputHeight(inputArea.getText());
 
@@ -458,22 +458,22 @@ public class ChatController {
         try {
             Path path = file.toPath();
             if (!Files.isRegularFile(path)) {
-                showNotification("✗ Image file not found");
+                showNotification("âœ— Image file not found");
                 return;
             }
             long size = Files.size(path);
             if (size <= 0) {
-                showNotification("✗ Image file is empty");
+                showNotification("âœ— Image file is empty");
                 return;
             }
             if (size > MAX_IMAGE_ATTACHMENT_BYTES) {
-                showNotification("✗ Image is too large (max 8 MB)");
+                showNotification("âœ— Image is too large (max 8 MB)");
                 return;
             }
 
             String mimeType = normalizeMimeType(Files.probeContentType(path), file.getName());
             if (!isSupportedImageMimeType(mimeType)) {
-                showNotification("✗ Unsupported image type");
+                showNotification("âœ— Unsupported image type");
                 return;
             }
 
@@ -481,7 +481,7 @@ public class ChatController {
             setPendingImageAttachment(new ChatService.ImageAttachment(file.getName(), mimeType, imageBytes));
             showNotification("Image attached: " + file.getName());
         } catch (IOException ex) {
-            showNotification("✗ Failed to attach image: " + ex.getMessage());
+            showNotification("âœ— Failed to attach image: " + ex.getMessage());
         }
     }
 
@@ -498,12 +498,12 @@ public class ChatController {
             int width = Math.max(1, (int) Math.round(clipboardImage.getWidth()));
             int height = Math.max(1, (int) Math.round(clipboardImage.getHeight()));
             if (width > 8192 || height > 8192) {
-                showNotification("✗ Clipboard image is too large");
+                showNotification("âœ— Clipboard image is too large");
                 return false;
             }
 
             if (clipboardImage.getPixelReader() == null) {
-                showNotification("✗ Clipboard image is not readable");
+                showNotification("âœ— Clipboard image is not readable");
                 return false;
             }
 
@@ -517,14 +517,14 @@ public class ChatController {
             byte[] pngBytes;
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 if (!ImageIO.write(bufferedImage, "png", out)) {
-                    showNotification("✗ Failed to encode clipboard image");
+                    showNotification("âœ— Failed to encode clipboard image");
                     return false;
                 }
                 pngBytes = out.toByteArray();
             }
 
             if (pngBytes.length > MAX_IMAGE_ATTACHMENT_BYTES) {
-                showNotification("✗ Clipboard image is too large (max 8 MB)");
+                showNotification("âœ— Clipboard image is too large (max 8 MB)");
                 return false;
             }
 
@@ -532,7 +532,7 @@ public class ChatController {
             showNotification("Image pasted from clipboard");
             return true;
         } catch (Exception ex) {
-            showNotification("✗ Failed to paste image: " + ex.getMessage());
+            showNotification("âœ— Failed to paste image: " + ex.getMessage());
             return false;
         }
     }
@@ -1035,7 +1035,7 @@ public class ChatController {
                 }
             }
         } else {
-            // Streaming text block — render formatted lines
+            // Streaming text block â€” render formatted lines
             String trimmed = activeRaw.trim();
             if (trimmed.isEmpty()) {
                 if (streamingActiveNode != null) {
@@ -1490,7 +1490,7 @@ public class ChatController {
 
     private void submitInlineQuestion(String selectedText, String question, VBox answerBox) {
         // Show loading indicator
-        Label loading = new Label("Cortex is thinking...");
+        Label loading = new Label("Altarix is thinking...");
         loading.getStyleClass().addAll("inline-discussion-loading");
         answerBox.getChildren().setAll(loading);
 
@@ -1508,7 +1508,7 @@ public class ChatController {
 
                     HBox headerRow = new HBox(6);
                     headerRow.setAlignment(Pos.CENTER_LEFT);
-                    Label aiLabel = new Label("Cortex");
+                    Label aiLabel = new Label("Altarix");
                     aiLabel.getStyleClass().add("inline-discussion-ai-label");
                     Region hSpacer = new Region();
                     HBox.setHgrow(hSpacer, Priority.ALWAYS);
@@ -2047,7 +2047,7 @@ public class ChatController {
 
     private void saveImageBytesToDisk(byte[] imageBytes, String suggestedFileName) {
         if (imageBytes == null || imageBytes.length == 0) {
-            showNotification("✗ Image data is unavailable");
+            showNotification("âœ— Image data is unavailable");
             return;
         }
         File targetFile = chooseImageSaveFile(suggestedFileName);
@@ -2056,15 +2056,15 @@ public class ChatController {
         }
         try {
             Files.write(targetFile.toPath(), imageBytes);
-            showNotification("✓ Image downloaded to " + targetFile.getName());
+            showNotification("âœ“ Image downloaded to " + targetFile.getName());
         } catch (IOException ex) {
-            showNotification("✗ Failed to save image: " + ex.getMessage());
+            showNotification("âœ— Failed to save image: " + ex.getMessage());
         }
     }
 
     private void downloadRemoteImageToDisk(String imageSource, String suggestedFileName) {
         if (imageSource == null || imageSource.isBlank()) {
-            showNotification("✗ Image URL is unavailable");
+            showNotification("âœ— Image URL is unavailable");
             return;
         }
         File targetFile = chooseImageSaveFile(suggestedFileName);
@@ -2093,16 +2093,16 @@ public class ChatController {
                         ? error.getCause()
                         : error;
                 String message = cause == null || cause.getMessage() == null ? "Unknown error" : cause.getMessage();
-                showNotification("✗ Failed to download image: " + message);
+                showNotification("âœ— Failed to download image: " + message);
                 return;
             }
-            showNotification("✓ Image downloaded to " + targetFile.getName());
+            showNotification("âœ“ Image downloaded to " + targetFile.getName());
         }));
     }
 
     private File chooseImageSaveFile(String suggestedFileName) {
         if (messageBox == null || messageBox.getScene() == null) {
-            showNotification("✗ Save dialog is unavailable");
+            showNotification("âœ— Save dialog is unavailable");
             return null;
         }
 
@@ -2416,7 +2416,7 @@ public class ChatController {
     private void previewWebSnippet(String language, String code, String messageContent, Button triggerButton) {
         initializeWebPreview();
         if (webPreviewView == null) {
-            showNotification("✗ Web preview is unavailable");
+            showNotification("âœ— Web preview is unavailable");
             return;
         }
 
@@ -2656,7 +2656,7 @@ public class ChatController {
 
     private RunResult runShellCommand(String command, RunningExecution execution) {
         try {
-            String shellPref = settingsManager.getString("terminal.defaultShell", "Cortex").trim().toLowerCase(Locale.ROOT);
+            String shellPref = settingsManager.getString("terminal.defaultShell", "altarix").trim().toLowerCase(Locale.ROOT);
             if (isWindows() && ("cmd".equals(shellPref) || "powershell".equals(shellPref))) {
                 boolean launched = launchExternalShellWindow(shellPref, command);
                 if (!launched) {
@@ -2679,9 +2679,9 @@ public class ChatController {
         try {
             List<String> launch;
             if ("cmd".equals(shell)) {
-                launch = List.of("cmd", "/c", "start", "\"Cortex CMD\"", "cmd", "/k", command);
+                launch = List.of("cmd", "/c", "start", "\"Altarix CMD\"", "cmd", "/k", command);
             } else {
-                launch = List.of("cmd", "/c", "start", "\"Cortex PowerShell\"", "powershell", "-NoExit", "-Command", command);
+                launch = List.of("cmd", "/c", "start", "\"Altarix PowerShell\"", "powershell", "-NoExit", "-Command", command);
             }
             ProcessBuilder builder = new ProcessBuilder(launch);
             builder.directory(terminalWorkingDirectory.toFile());
@@ -2743,7 +2743,7 @@ public class ChatController {
     }
 
     private List<String> buildDefaultShellCommand(String command) {
-        String shellPref = settingsManager.getString("terminal.defaultShell", "Cortex").trim().toLowerCase(Locale.ROOT);
+        String shellPref = settingsManager.getString("terminal.defaultShell", "altarix").trim().toLowerCase(Locale.ROOT);
 
         return switch (shellPref) {
             case "cmd" -> isWindows() ? List.of("cmd", "/c", command) : buildAutoShellCommand(command);
@@ -2757,7 +2757,7 @@ public class ChatController {
                 yield buildAutoShellCommand(command);
             }
             case "bash" -> isCommandAvailable("bash") ? List.of("bash", "-lc", command) : buildAutoShellCommand(command);
-            case "cortex" -> buildAutoShellCommand(command);
+            case "altarix" -> buildAutoShellCommand(command);
             default -> buildAutoShellCommand(command);
         };
     }
@@ -3021,10 +3021,10 @@ public class ChatController {
         }
         button.setGraphic(null);
         button.setText(switch (position) {
-            case LEFT -> "←";
-            case RIGHT -> "→";
-            case TOP -> "↑";
-            case BOTTOM -> "↓";
+            case LEFT -> "â†";
+            case RIGHT -> "â†’";
+            case TOP -> "â†‘";
+            case BOTTOM -> "â†“";
         });
     }
 
@@ -3278,7 +3278,7 @@ public class ChatController {
         StringBuilder sb = new StringBuilder();
         sb.append("# ").append(conversation.getTitle()).append("\n\n");
         for (Message msg : conversation.getMessages()) {
-            String sender = msg.getSender() == Message.Sender.USER ? "👤 User" : "🤖 Cortex";
+            String sender = msg.getSender() == Message.Sender.USER ? "ðŸ‘¤ User" : "ðŸ¤– Altarix";
             sb.append("## ").append(sender).append("\n\n");
             sb.append(msg.getContent()).append("\n\n---\n\n");
         }
@@ -3296,7 +3296,7 @@ public class ChatController {
         }
         StringBuilder sb = new StringBuilder();
         for (Message msg : conversation.getMessages()) {
-            String sender = msg.getSender() == Message.Sender.USER ? "USER" : "CORTEX";
+            String sender = msg.getSender() == Message.Sender.USER ? "USER" : "Altarix";
             sb.append(sender).append(":\n").append(msg.getContent()).append("\n\n");
         }
         ClipboardContent cc = new ClipboardContent();
@@ -3387,13 +3387,13 @@ public class ChatController {
             if (selectedFile != null) {
                 boolean success = handler.export(selectedFile);
                 if (success) {
-                    showNotification("✓ Chat exported successfully to " + selectedFile.getName());
+                    showNotification("âœ“ Chat exported successfully to " + selectedFile.getName());
                 } else {
-                    showNotification("✗ Failed to export chat");
+                    showNotification("âœ— Failed to export chat");
                 }
             }
         } catch (Exception ex) {
-            showNotification("✗ Export error: " + ex.getMessage());
+            showNotification("âœ— Export error: " + ex.getMessage());
         }
     }
 
@@ -3413,9 +3413,9 @@ public class ChatController {
 
             exportToastLabel.setText(message == null ? "" : message);
             exportToastBanner.getStyleClass().removeAll("export-toast-success", "export-toast-error", "export-toast-info");
-            if (message != null && message.startsWith("✓")) {
+            if (message != null && message.startsWith("âœ“")) {
                 exportToastBanner.getStyleClass().add("export-toast-success");
-            } else if (message != null && message.startsWith("✗")) {
+            } else if (message != null && message.startsWith("âœ—")) {
                 exportToastBanner.getStyleClass().add("export-toast-error");
             } else {
                 exportToastBanner.getStyleClass().add("export-toast-info");
@@ -3463,4 +3463,5 @@ public class ChatController {
     }
 
 }
+
 

@@ -1,5 +1,5 @@
 /* ============================================================================ */
-/* CORTEX - MASTER STYLESHEET CONFIGURATION */
+/* Altarix - MASTER STYLESHEET CONFIGURATION */
 /* ============================================================================ */
 /*
  * This file orchestrates the modular CSS architecture.
@@ -10,26 +10,26 @@
  *
  * FOLDER STRUCTURE:
  * styles/
- * ├── core/                 (Theme-independent structure and layout)
- * │   ├── _base.css         (Typography, sizing constants)
- * │   ├── _layout.css       (Container and layout structures)
- * │   ├── _buttons.css      (Button structure without colors)
- * │   ├── _inputs.css       (Input field structure without colors)
- * │   ├── _bubbles.css      (Message bubble structure without colors)
- * │   └── _components.css   (Miscellaneous UI components structure)
- * │
- * └── themes/               (Theme-specific colors and overrides)
- *     ├── dark-purple/      (Original purple theme)
- *     │   ├── _tokens.css   (Purple color variables)
- *     │   └── theme.css     (Complete purple theme with light mode)
- *     │
- *     ├── dark-green/       (Emerald green theme)
- *     │   ├── _tokens.css   (Green color variables)
- *     │   └── theme.css     (Complete green theme with light mode)
- *     │
- *     └── light/            (Light universal theme)
- *         ├── _tokens.css   (Light mode color variables)
- *         └── theme.css     (Light theme complete styles)
+ * â”œâ”€â”€ core/                 (Theme-independent structure and layout)
+ * â”‚   â”œâ”€â”€ _base.css         (Typography, sizing constants)
+ * â”‚   â”œâ”€â”€ _layout.css       (Container and layout structures)
+ * â”‚   â”œâ”€â”€ _buttons.css      (Button structure without colors)
+ * â”‚   â”œâ”€â”€ _inputs.css       (Input field structure without colors)
+ * â”‚   â”œâ”€â”€ _bubbles.css      (Message bubble structure without colors)
+ * â”‚   â””â”€â”€ _components.css   (Miscellaneous UI components structure)
+ * â”‚
+ * â””â”€â”€ themes/               (Theme-specific colors and overrides)
+ *     â”œâ”€â”€ dark-purple/      (Original purple theme)
+ *     â”‚   â”œâ”€â”€ _tokens.css   (Purple color variables)
+ *     â”‚   â””â”€â”€ theme.css     (Complete purple theme with light mode)
+ *     â”‚
+ *     â”œâ”€â”€ dark-green/       (Emerald green theme)
+ *     â”‚   â”œâ”€â”€ _tokens.css   (Green color variables)
+ *     â”‚   â””â”€â”€ theme.css     (Complete green theme with light mode)
+ *     â”‚
+ *     â””â”€â”€ light/            (Light universal theme)
+ *         â”œâ”€â”€ _tokens.css   (Light mode color variables)
+ *         â””â”€â”€ theme.css     (Light theme complete styles)
  *
  * USAGE IN JAVA:
  *
@@ -81,9 +81,9 @@
  *
  * FILE NAMING CONVENTIONS:
  *
- * _prefix.css     — Internal/private stylesheet (underscore prefix)
- * theme.css       — Complete theme with all colors and overrides
- * _tokens.css     — Color variables and design tokens (for reference)
+ * _prefix.css     â€” Internal/private stylesheet (underscore prefix)
+ * theme.css       â€” Complete theme with all colors and overrides
+ * _tokens.css     â€” Color variables and design tokens (for reference)
  *
  * CLASS NAMING CONVENTIONS (in use):
  *
@@ -102,3 +102,4 @@
  * - Pure CSS with gradients, shadows, and effects
  *
  * ============================================================================ */
+

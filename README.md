@@ -1,6 +1,6 @@
-# Cortex Desktop Application (JavaFX)
+# Altarix Desktop Application (JavaFX)
 
-Cortex is a JavaFX desktop AI assistant built with Java 25 and Gradle. It supports multi-conversation chat, markdown rendering, inline "ask about selection" threads, code execution, terminal tooling, theming, settings, and export options.
+Altarix is a JavaFX desktop AI assistant built with Java 25 and Gradle. It supports multi-conversation chat, markdown rendering, inline "ask about selection" threads, code execution, terminal tooling, theming, settings, and export options.
 
 ## Current Status
 
@@ -25,8 +25,8 @@ Implemented:
 
 ## Configuration (Important)
 
-Cortex resolves `app.properties` in this order:
-1. `Cortex/app.properties` (project root, outside `ai-project`)
+Altarix resolves `app.properties` in this order:
+1. `Altarix/app.properties` (project root, outside `ai-project`)
 2. `ai-project/src/main/resources/app.properties`
 3. Classpath fallback `/app.properties`
 
@@ -60,7 +60,7 @@ Notes:
 
 ## Run and Build
 
-From `cortex`:
+From `Altarix`:
 
 Run app:
 
@@ -118,11 +118,12 @@ Language/runtime availability is detected dynamically at runtime.
 ## Security Guidance
 
 - Do not commit real API keys.
-- Keep secrets in local `Cortex/app.properties` or environment variables.
+- Keep secrets in local `Altarix/app.properties` or environment variables.
 - `.gitignore` is configured to ignore local `app.properties` paths used for API secrets.
 
 ## Troubleshooting
 
 - `HTTP 401`: API key/provider mismatch or invalid key.
-- `API key is missing`: add `past_api` to `Cortex/app.properties` or configure via Settings > AI Model.
+- `API key is missing`: add `past_api` to `Altarix/app.properties` or configure via Settings > AI Model.
 - Runtime not found for code execution: install the required compiler/runtime or set custom runtime paths in settings.
+
