@@ -2,6 +2,7 @@ package com.example.chatbot;
 
 import com.altarix.util.IconResources;
 import com.example.chatbot.controller.MainController;
+import com.example.chatbot.update.UpdateService;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
@@ -65,6 +66,10 @@ public class MainApp extends Application {
 
         // ---- Show Window ----
         primaryStage.show();
+
+        // ---- Check for updates after the UI is visible ----
+        UpdateService updateService = new UpdateService();
+        updateService.checkForUpdates(primaryStage);
     }
 
     // ================= CUSTOM WINDOW RESIZE =================

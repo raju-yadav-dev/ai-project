@@ -1933,6 +1933,79 @@
     -fx-background-color: rgba(99, 102, 241, 0.35);
 }
 
+/* ================= UPDATE DIALOG ================= */
+.update-dialog-root {
+    -fx-background-color: rgba(15, 23, 42, 0.65);
+    -fx-padding: 18;
+}
+
+.update-dialog-card {
+    -fx-background-color: -app-surface-elevated;
+    -fx-border-color: -app-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 18, 0.2, 0, 6);
+}
+
+.update-dialog-title {
+    -fx-text-fill: -app-text-primary;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+}
+
+.update-dialog-status {
+    -fx-text-fill: -app-text-secondary;
+    -fx-font-size: 12px;
+}
+
+.update-dialog-section {
+    -fx-text-fill: -app-text-primary;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+.update-dialog-notes {
+    -fx-background-color: rgba(15, 23, 42, 0.4);
+    -fx-control-inner-background: rgba(15, 23, 42, 0.4);
+    -fx-text-fill: -app-text-primary;
+    -fx-prompt-text-fill: -app-text-secondary;
+    -fx-border-color: -app-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-font-size: 12px;
+}
+
+.update-dialog-mandatory {
+    -fx-text-fill: -app-warning;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-background-color: rgba(245, 158, 11, 0.15);
+    -fx-border-color: rgba(245, 158, 11, 0.35);
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 4 10;
+}
+
+.update-dialog-actions .button {
+    -fx-background-color: -app-accent;
+    -fx-text-fill: -app-text-primary;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-font-weight: 600;
+    -fx-padding: 6 16;
+}
+
+.update-dialog-actions .button:focused {
+    -fx-border-color: -app-accent;
+}
+
+.update-dialog-actions .button:first-child {
+    -fx-background-color: transparent;
+    -fx-border-color: -app-border;
+    -fx-text-fill: -app-text-secondary;
+}
+
 .chat-split-pane {
     -fx-background-color: transparent;
     -fx-padding: 0;

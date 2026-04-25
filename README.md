@@ -94,6 +94,87 @@ Build both installers:
 
 The generated installers are written to `build\installers`.
 
+## Use After Downloading Installer
+
+If you downloaded an installer from GitHub Releases:
+
+Windows (`.exe`)
+- Double-click `Altarix-windows.exe`
+- Complete setup wizard
+- Launch **Altarix** from Start Menu or Desktop shortcut
+
+Linux (`.deb`)
+- Install with:
+
+```bash
+sudo dpkg -i Altarix-linux.deb
+sudo apt-get install -f
+```
+
+- Launch from app menu or run `altarix` from terminal (if available in PATH)
+
+macOS (`.dmg`)
+- Open `Altarix-macos.dmg`
+- Drag Altarix to Applications
+- Start Altarix from Applications
+
+First launch notes:
+- If your OS shows a security warning, allow/trust the app once.
+- Internet is required for AI requests.
+
+## Set API From the App
+
+You can configure API settings directly from the UI:
+
+1. Open **Settings** from the app.
+2. Go to the **AI Model** section.
+3. Enter:
+	- API key
+	- Base URL
+	- Model name
+4. Save settings.
+5. Send a test prompt in chat.
+
+If requests fail:
+- Check key validity and provider quota.
+- Confirm base URL is correct for your provider.
+- Verify model ID exists for your account.
+
+## If You Fork This Repository
+
+Use this flow to run your own version:
+
+1. Fork the repo on GitHub.
+2. Clone your fork:
+
+```bash
+git clone https://github.com/<your-username>/<your-fork>.git
+cd <your-fork>/altarix
+```
+
+3. Run locally:
+
+```bash
+./gradlew run
+```
+
+Windows:
+
+```powershell
+.\gradlew.bat run
+```
+
+4. Configure your own API credentials in-app (Settings > AI Model) or local config.
+5. If you use CI/CD release workflow, add your own GitHub secrets:
+	- `SUPABASE_URL`
+	- `SUPABASE_SERVICE_ROLE_KEY`
+6. Create a version tag to trigger release builds:
+
+```bash
+git tag -a v1.0.0 -m "Initial release"
+git push origin v1.0.0
+```
+
 ## Code Execution Languages
 
 Supported runtimes/compilers include:

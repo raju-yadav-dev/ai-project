@@ -103,8 +103,11 @@ afterEvaluate {
 
 def vendorName = 'Altarix AI'
 def isWindows = currentOs.windows
+def isLinux = currentOs.linux
+def isMac = currentOs.macOsX
 def installerOutputDir = layout.buildDirectory.dir('installers')
 def iconFile = file('src/main/resources/icon/Altarix-256.png')
+def macIconFile = file('src/main/resources/icon/Altarix.icns')
 def jarTask = tasks.named('jar', Jar)
 
 def jpackageExecutable = providers.provider {
@@ -128,6 +131,36 @@ def windowsInstallerArgs = { String installerType ->
     ]
 }
 
+def linuxInstallerArgs = { String installerType ->
+    [
+        '--name', appName,
+        '--input', layout.buildDirectory.dir('libs').get().asFile.absolutePath,
+        '--main-jar', jarTask.get().archiveFileName.get(),
+        '--type', installerType,
+        '--dest', installerOutputDir.get().asFile.absolutePath,
+        '--app-version', appVersion,
+        '--vendor', vendorName,
+        '--icon', iconFile.absolutePath,
+        '--linux-shortcut'
+    ]
+}
+
+def macInstallerArgs = { String installerType ->
+    def args = [
+        '--name', appName,
+        '--input', layout.buildDirectory.dir('libs').get().asFile.absolutePath,
+        '--main-jar', jarTask.get().archiveFileName.get(),
+        '--type', installerType,
+        '--dest', installerOutputDir.get().asFile.absolutePath,
+        '--app-version', appVersion,
+        '--vendor', vendorName
+    ]
+    if (macIconFile.exists()) {
+        args += ['--icon', macIconFile.absolutePath]
+    }
+    return args
+}
+
 tasks.register('packageExe', Exec) {
     group = 'distribution'
     description = 'Builds a Windows .exe installer for Altarix.'
@@ -138,6 +171,32 @@ tasks.register('packageExe', Exec) {
         installerOutputDir.get().asFile.mkdirs()
         executable = jpackageExecutable.get()
         args windowsInstallerArgs('exe')
+    }
+}
+
+tasks.register('packageDeb', Exec) {
+    group = 'distribution'
+    description = 'Builds a Linux .deb installer for Altarix.'
+    dependsOn jarTask
+    onlyIf { isLinux }
+
+    doFirst {
+        installerOutputDir.get().asFile.mkdirs()
+        executable = jpackageExecutable.get()
+        args linuxInstallerArgs('deb')
+    }
+}
+
+tasks.register('packageDmg', Exec) {
+    group = 'distribution'
+    description = 'Builds a macOS .dmg installer for Altarix.'
+    dependsOn jarTask
+    onlyIf { isMac }
+
+    doFirst {
+        installerOutputDir.get().asFile.mkdirs()
+        executable = jpackageExecutable.get()
+        args macInstallerArgs('dmg')
     }
 }
 
@@ -157,6 +216,6 @@ tasks.register('packageMsi', Exec) {
 tasks.register('packageInstallers') {
     group = 'distribution'
     description = 'Builds both Windows installers for Altarix.'
-    dependsOn 'packageExe', 'packageMsi'
+    dependsOn 'packageExe', 'packageMsi', 'packageDeb', 'packageDmg'
 }
 
