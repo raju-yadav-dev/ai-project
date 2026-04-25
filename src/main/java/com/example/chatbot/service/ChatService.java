@@ -1611,32 +1611,16 @@ public class ChatService {
             return ("""
                     API keys are missing for: %s.
 
-                    `Altarix/app.properties` was not found, so the app used bundled fallback properties.
+                No local Altarix/app.properties was found, and fallback properties do not contain your keys.
 
-                    Add provider keys in `Altarix/app.properties`, for example:
-
-                    ```properties
-                    past_api_1=YOUR_GROQ_KEY_1
-                    past_api_2=YOUR_GROQ_KEY_2
-                    google_ai_studio_api_1=YOUR_GOOGLE_KEY_1
-                    leonardo_api_1=YOUR_LEONARDO_KEY_1
-                    freepik_api_1=YOUR_FREEPIK_KEY_1
-                    ```
+                Open Settings > AI Mode, add your provider API keys, then save and retry.
                     """).formatted(providers);
         }
 
         return ("""
                 API keys are missing for: %s.
 
-                Configure your provider keys in `Altarix/app.properties`:
-
-                ```properties
-                past_api_1=YOUR_GROQ_KEY_1
-                past_api_2=YOUR_GROQ_KEY_2
-                google_ai_studio_api_1=YOUR_GOOGLE_KEY_1
-                leonardo_api_1=YOUR_LEONARDO_KEY_1
-                freepik_api_1=YOUR_FREEPIK_KEY_1
-                ```
+            Open Settings > AI Mode, add your provider API keys, then save and retry.
                 """).formatted(providers);
     }
 

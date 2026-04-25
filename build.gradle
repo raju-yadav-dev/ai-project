@@ -106,7 +106,8 @@ def isWindows = currentOs.windows
 def isLinux = currentOs.linux
 def isMac = currentOs.macOsX
 def installerOutputDir = layout.buildDirectory.dir('installers')
-def iconFile = file('src/main/resources/icon/Altarix-256.png')
+def windowsIconFile = file('src/main/resources/icon/Altarix-1024.ico')
+def linuxIconFile = file('src/main/resources/icon/Altarix-1024.png')
 def macIconFile = file('src/main/resources/icon/Altarix.icns')
 def jarTask = tasks.named('jar', Jar)
 
@@ -124,7 +125,7 @@ def windowsInstallerArgs = { String installerType ->
         '--dest', installerOutputDir.get().asFile.absolutePath,
         '--app-version', appVersion,
         '--vendor', vendorName,
-        '--icon', iconFile.absolutePath,
+        '--icon', windowsIconFile.absolutePath,
         '--win-menu',
         '--win-shortcut',
         '--win-menu-group', appName
@@ -140,7 +141,7 @@ def linuxInstallerArgs = { String installerType ->
         '--dest', installerOutputDir.get().asFile.absolutePath,
         '--app-version', appVersion,
         '--vendor', vendorName,
-        '--icon', iconFile.absolutePath,
+        '--icon', linuxIconFile.absolutePath,
         '--linux-shortcut'
     ]
 }
