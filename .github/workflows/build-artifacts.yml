@@ -215,13 +215,8 @@ jobs:
           name: ${{ steps.release_meta.outputs.release_name }}
           generate_release_notes: true
           append_body: true
-          draft: false
-          prerelease: false
           make_latest: true
           fail_on_unmatched_files: true
-          target_commitish: ${{ github.sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          preserve_order: true
           overwrite_files: true
           files: |
             release-assets/**/*.exe
